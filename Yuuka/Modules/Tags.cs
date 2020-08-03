@@ -1,5 +1,9 @@
-﻿using Discord.Commands;
+﻿using Discord.Audio;
+using Discord.Commands;
 using DiscordUtils;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,9 +30,14 @@ namespace Yuuka.Modules
                 else
                 {
                     extension = Utils.GetExtension(att.Filename);
-                    if (Utils.IsImage(Utils.GetExtension(att.Filename)))
+                    if (Utils.IsImage(extension))
                     {
                         type = TagType.IMAGE;
+                        tContent = await Program.P.HttpClient.GetByteArrayAsync(att.Url);
+                    }
+                    else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg")
+                    {
+                        type = TagType.AUDIO;
                         tContent = await Program.P.HttpClient.GetByteArrayAsync(att.Url);
                     }
                     else
@@ -59,12 +68,44 @@ namespace Yuuka.Modules
             else
             {
                 var ttag = tag.Value;
-                if (ttag.Type == Database.TagType.TEXT)
+                if (ttag.Type == TagType.TEXT)
                     await context.Channel.SendMessageAsync((string)ttag.Content);
-                else if (ttag.Type == Database.TagType.IMAGE)
+                else if (ttag.Type == TagType.IMAGE)
                 {
                     using MemoryStream ms = new MemoryStream((byte[])ttag.Content);
                     await context.Channel.SendFileAsync(ms, "Image" + ttag.Extension);
+                }
+                else if (ttag.Type == TagType.AUDIO)
+                {
+                    Discord.IGuildUser guildUser = context.User as Discord.IGuildUser;
+                    if (guildUser.VoiceChannel == null)
+                        await context.Channel.SendMessageAsync("You must be in a vocal channel for vocal tags.");
+                    else
+                    {
+                        IAudioClient audioClient = await guildUser.VoiceChannel.ConnectAsync();
+                        if (!File.Exists("ffmpeg.exe"))
+                            throw new FileNotFoundException("ffmpeg.exe was not found near the bot executable.");
+                        string fileName = "audio" + Program.P.Rand.Next(0, 1000000) + ttag.Extension;
+                        File.WriteAllBytes(fileName, (byte[])ttag.Content);
+                        Process process = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "ffmpeg.exe",
+                            Arguments = $"-hide_banner -loglevel panic -i {fileName} -af volume=0.2 -ac 2 -f s16le -ar 48000 pipe:",
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true
+                        });
+                        using Stream output = process.StandardOutput.BaseStream;
+                        using AudioOutStream discord = audioClient.CreatePCMStream(AudioApplication.Music);
+                        try
+                        {
+                            await output.CopyToAsync(discord);
+                        }
+                        catch (OperationCanceledException)
+                        { }
+                        await discord.FlushAsync();
+                        await audioClient.StopAsync();
+                        File.Delete(fileName);
+                    }
                 }
             }
         }

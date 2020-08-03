@@ -72,7 +72,16 @@ namespace Yuuka
                 SocketCommandContext context = new SocketCommandContext(Client, msg);
                 var result = await _commands.ExecuteAsync(context, pos, null);
                 if (!result.IsSuccess && msg.Content.Split(' ').Length == 1) // Command failed & message have only one argument
-                    await Tags.Show(context, msg.Content.Substring(pos).ToLower());
+                    _ = Task.Run(async () => {
+                        try
+                        {
+                            await Tags.Show(context, msg.Content.Substring(pos).ToLower());
+                        }
+                        catch (Exception e)
+                        {
+                            await Utils.LogError(new LogMessage(LogSeverity.Error, e.Source, e.Message, e));
+                        }
+                    });
             }
         }
     }
