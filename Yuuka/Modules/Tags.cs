@@ -90,7 +90,7 @@ namespace Yuuka.Modules
                         Process process = Process.Start(new ProcessStartInfo
                         {
                             FileName = "ffmpeg.exe",
-                            Arguments = $"-hide_banner -loglevel panic -i {fileName} -af volume=0.2 -ac 2 -f s16le -ar 48000 pipe:",
+                            Arguments = $"-hide_banner -loglevel panic -i {fileName} -ac 2 -f s16le -ar 48000 pipe:",
                             UseShellExecute = false,
                             RedirectStandardOutput = true
                         });

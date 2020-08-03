@@ -14,8 +14,8 @@ namespace Yuuka
 {
     public sealed class Program
     {
-        public static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
+        public static async Task Main()
+            => await new Program().MainAsync();
 
         public DiscordSocketClient Client { private set; get; }
         private readonly CommandService _commands = new CommandService();

@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RethinkDb.Driver;
 using RethinkDb.Driver.Net;
@@ -26,7 +25,21 @@ namespace Yuuka.Database
 
             _globalTags = new Dictionary<string, Tag>();
             foreach (JObject elem in await _r.Db(_dbName).Table("Tags").RunAsync(_conn))
-                _globalTags.Add(elem["Key"].Value<string>(), JsonConvert.DeserializeObject<Tag>(elem.ToString()));
+            {
+                var type = (TagType)elem["Type"].Value<int>();
+                string tag = elem["Key"].Value<string>();
+                string user = elem["User"].Value<string>();
+                ulong userId = elem["UserId"].Value<ulong>();
+                object content;
+                if (type == TagType.TEXT)
+                    content = elem["Content"].Value<string>();
+                else
+                {
+                    content = (byte[])await _r.Binary(elem["Content"]).RunAsync<byte[]>(_conn);
+                }
+                string extension = elem["Extension"].Value<string>();
+                _globalTags.Add(tag, new Tag(tag, type, user, userId, content, extension));
+            }
         }
 
         public async Task<bool> AddTagAsync<T>(TagType type, string key, IUser user, T content, string extension)
