@@ -5,12 +5,14 @@ using DiscordUtils;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Yuuka.Database;
 using Yuuka.Modules;
 
 namespace Yuuka
 {
-    class Program
+    public sealed class Program
     {
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
@@ -21,6 +23,10 @@ namespace Yuuka
         public Random Rand { private set; get; }
 
         public DateTime StartTime { private set; get; }
+
+        public HttpClient HttpClient { private set; get; }
+
+        public Db Db { private set; get; }
 
         private Program()
         {
@@ -40,8 +46,12 @@ namespace Yuuka
 
             P = this;
             Rand = new Random();
+            HttpClient = new HttpClient();
+            Db = new Db();
+            await Db.InitAsync("Yuuka");
 
             await _commands.AddModuleAsync<Communication>(null);
+            await _commands.AddModuleAsync<Tags>(null);
 
             Client.MessageReceived += HandleCommandAsync;
 
@@ -57,10 +67,12 @@ namespace Yuuka
             SocketUserMessage msg = arg as SocketUserMessage;
             if (msg == null || arg.Author.IsBot) return;
             int pos = 0;
-            if (msg.HasMentionPrefix(Client.CurrentUser, ref pos) || msg.HasStringPrefix("y.", ref pos))
+            if (msg.HasMentionPrefix(Client.CurrentUser, ref pos) || msg.HasStringPrefix(".", ref pos))
             {
                 SocketCommandContext context = new SocketCommandContext(Client, msg);
-                await _commands.ExecuteAsync(context, pos, null);
+                var result = await _commands.ExecuteAsync(context, pos, null);
+                if (!result.IsSuccess && msg.Content.Split(' ').Length == 1) // Command failed & message have only one argument
+                    await Tags.Show(context, msg.Content.Substring(pos).ToLower());
             }
         }
     }
