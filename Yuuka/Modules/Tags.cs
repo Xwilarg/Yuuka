@@ -269,7 +269,6 @@ namespace Yuuka.Modules
                         };
                         process.BeginErrorReadLine();
                         process.WaitForExit();
-                        var match = Regex.Match(vOutput, "max_volume: ([-0-9.]+) dB");
                         double volume = double.Parse(Regex.Match(vOutput, "mean_volume: ([-0-9.]+) dB").Groups[1].Value);
                         double objective = -30 - volume;
                         process = Process.Start(new ProcessStartInfo

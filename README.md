@@ -27,4 +27,6 @@ If you use the invite link below there are 2 rules you should know:
  - Tags are global, which mean they can be used between servers so don't send NSFW content or audio with sound too loud
  - My storage is limited so don't keep sending huge files
  
-If you fail to comply, the bot will be removed from your server and you'll be banned.
+## Being whitelisted
+Since the bot is still in a test phase, you need to be whitelisted to create tags.<br/>
+For this, please contact Zirk#0001 on Discord.
