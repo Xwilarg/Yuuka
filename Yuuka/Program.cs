@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +31,8 @@ namespace Yuuka
 
         public Db Db { private set; get; }
 
+        public ulong[] Whitelist { private set; get; }
+
         private Program()
         {
             Client = new DiscordSocketClient(new DiscordSocketConfig
@@ -45,6 +48,10 @@ namespace Yuuka
             dynamic json = JsonConvert.DeserializeObject(File.ReadAllText("Keys/Credentials.json"));
             if (json.botToken == null)
                 throw new NullReferenceException("Your Credentials.json is missing mandatory information, it must at least contains botToken and ownerId");
+
+            if (!File.Exists("Keys/Whitelist.txt"))
+                throw new FileNotFoundException("Missing Whitelist file");
+            Whitelist = File.ReadAllLines("Keys/Whitelist.txt").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => ulong.Parse(x.Split(new[] { "//" }, StringSplitOptions.None)[0].Trim())).ToArray();
 
             P = this;
             Rand = new Random();

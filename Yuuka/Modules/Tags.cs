@@ -175,6 +175,11 @@ namespace Yuuka.Modules
         [Command("Create")]
         public async Task Create(string key, [Remainder]string content = "")
         {
+            if (!Program.P.Whitelist.Contains(Context.User.Id))
+            {
+                await ReplyAsync("You are not whitelisted to create tags.");
+                return;
+            }
             if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_'))
             {
                 await ReplyAsync("Your tag name can only contains alphanumeric characters and underscores");
@@ -186,7 +191,7 @@ namespace Yuuka.Modules
             if (Context.Message.Attachments.Count > 0)
             {
                 var att = Context.Message.Attachments.ElementAt(0);
-                if (att.Size > 8000000)
+                if (att.Size > 1000000)
                 {
                     await ReplyAsync("Your file can't be more than 8MB.");
                     return;
