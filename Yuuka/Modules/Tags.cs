@@ -1,7 +1,6 @@
 ﻿using Discord.Audio;
 using Discord.Commands;
 using DiscordUtils;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -14,6 +13,83 @@ namespace Yuuka.Modules
 {
     public sealed class Tags : ModuleBase
     {
+        [Command("Help")]
+        public async Task Help()
+        {
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "Help",
+                Description =
+                    "Help: Display this help\n" +
+                    "Info: Display information about the bot\n" +
+                    "List: List all the tags\n" +
+                    "Random: Suggest a random tag\n" +
+                    "Random text/image/audio: Suggestion a random text/image/audio tag\n" +
+                    "Create tagName tagConten: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment"
+            }.Build());
+        }
+
+        [Command("List")]
+        public async Task List()
+        {
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "List of all the tags",
+                Description = string.Join(", ", Program.P.Db.GetList())
+            }.Build());
+        }
+
+        [Command("Random"), Priority(1)]
+        public async Task Random()
+        {
+            var random = Program.P.Db.GetRandom();
+            var type = random.Type.ToString();
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = type[0] + string.Join("", type.Skip(1)).ToLower() + " tag suggestion",
+                Description = $"Try doing \"{random.Key}\""
+            }.Build());
+        }
+
+        [Command("Random text"), Priority(1)]
+        public async Task RandomText()
+        {
+            var random = Program.P.Db.GetRandomWithType(TagType.TEXT);
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "Text tag suggestion",
+                Description = $"Try doing \"{random.Key}\""
+            }.Build());
+        }
+
+        [Command("Random image"), Priority(1)]
+        public async Task RandomImage()
+        {
+            var random = Program.P.Db.GetRandomWithType(TagType.IMAGE);
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "Image tag suggestion",
+                Description = $"Try doing \"{random.Key}\""
+            }.Build());
+        }
+
+        [Command("Random audio"), Priority(1)]
+        public async Task RandomAudio()
+        {
+            var random = Program.P.Db.GetRandomWithType(TagType.AUDIO);
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "Audio tag suggestion",
+                Description = $"Try doing \"{random.Key}\""
+            }.Build());
+        }
+
         [Command("Create")]
         public async Task Create(string key, [Remainder]string content = "")
         {

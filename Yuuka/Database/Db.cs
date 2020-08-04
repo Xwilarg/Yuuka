@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using RethinkDb.Driver;
 using RethinkDb.Driver.Net;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Yuuka.Database
@@ -53,6 +54,22 @@ namespace Yuuka.Database
             _globalTags.Add(key, tag);
             return true;
 
+        }
+
+        public Tag GetRandom()
+        {
+            return new List<Tag>(_globalTags.Values)[Program.P.Rand.Next(_globalTags.Values.Count)];
+        }
+
+        public Tag GetRandomWithType(TagType type)
+        {
+            var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type);
+            return tags.ElementAt(Program.P.Rand.Next(0, tags.Count()));
+        }
+
+        public string[] GetList()
+        {
+            return new List<Tag>(_globalTags.Values).Select(x => x.Key).ToArray();
         }
 
         public Tag? GetTag(string key)
