@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using RethinkDb.Driver;
 using RethinkDb.Driver.Net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,7 +31,11 @@ namespace Yuuka.Database
                 var type = (TagType)elem["Type"].Value<int>();
                 string tag = elem["Key"].Value<string>();
                 string user = elem["User"].Value<string>();
-                ulong userId = elem["UserId"].Value<ulong>();
+                string userId = elem["UserId"].Value<string>();
+                bool isNsfw = elem["IsNsfw"].Value<bool>();
+                DateTime creationTime = new DateTime(1970, 1, 1).AddSeconds(elem["CreationTime"]["epoch_time"].Value<double>());
+                int nbUsage = elem["NbUsage"].Value<int>();
+                string serverId = elem["ServerId"].Value<string>();
                 object content;
                 if (type == TagType.TEXT)
                     content = elem["Content"].Value<string>();
@@ -39,17 +44,17 @@ namespace Yuuka.Database
                     content = (byte[])await _r.Binary(elem["Content"]).RunAsync<byte[]>(_conn);
                 }
                 string extension = elem["Extension"].Value<string>();
-                _globalTags.Add(tag, new Tag(tag, type, user, userId, content, extension));
+                _globalTags.Add(tag, new Tag(tag, type, user, userId, content, extension, isNsfw, creationTime, nbUsage, serverId));
             }
         }
 
-        public async Task<bool> AddTagAsync<T>(TagType type, string key, IUser user, T content, string extension)
+        public async Task<bool> AddTagAsync<T>(TagType type, string key, IUser user, T content, string extension, string serverId)
         {
             key = key.ToLower();
             if (await _r.Db(_dbName).Table("Tags").GetAll(key.GetHashCode()).Count().Eq(1).RunAsync<bool>(_conn))
                 return false;
 
-            Tag tag = new Tag(key, type, user.ToString(), user.Id, content, extension);
+            Tag tag = new Tag(key, type, user.ToString(), user.Id.ToString(), content, extension, false, DateTime.UtcNow, 0, serverId);
             await _r.Db(_dbName).Table("Tags").Insert(tag).RunAsync(_conn);
             _globalTags.Add(key, tag);
             return true;
@@ -78,14 +83,24 @@ namespace Yuuka.Database
             return tags.Select(x => x.Key).ToArray();
         }
 
-        public Tag? GetTag(string key)
+        public Tag GetTag(string key)
         {
             if (!_globalTags.ContainsKey(key))
                 return null;
             return _globalTags[key];
         }
 
-        public int GetCount(ulong userId)
+        public async Task<Tag> SendTag(string key)
+        {
+            if (!_globalTags.ContainsKey(key))
+                return null;
+            var tag = _globalTags[key];
+            tag.NbUsage++;
+            await _r.Db(_dbName).Table("Tags").Update(tag).RunAsync(_conn);
+            return _globalTags[key];
+        }
+
+        public int GetCount(string userId)
             => new List<Tag>(_globalTags.Values).Count(x => x.UserId == userId);
 
         private RethinkDB _r;

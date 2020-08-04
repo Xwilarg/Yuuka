@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
+using System;
 
 namespace Yuuka.Database
 {
-    public struct Tag
+    public class Tag
     {
-        public Tag(string key, TagType type, string user, ulong userId, object content, string extension)
+        public Tag(string key, TagType type, string user, string userId, object content, string extension, bool isNsfw, DateTime creationTime, int nbUsage, string serverId)
         {
             id = key.GetHashCode().ToString();
             Key = key;
@@ -13,6 +14,10 @@ namespace Yuuka.Database
             UserId = userId;
             Content = content;
             Extension = extension;
+            IsNsfw = isNsfw;
+            CreationTime = creationTime;
+            NbUsage = nbUsage;
+            ServerId = serverId;
         }
 
         [JsonProperty]
@@ -24,10 +29,18 @@ namespace Yuuka.Database
         [JsonProperty]
         public string User;
         [JsonProperty]
-        public ulong UserId;
+        public string UserId;
         [JsonProperty]
         public object Content;
         [JsonProperty]
         public string Extension;
+        [JsonProperty]
+        public bool IsNsfw;
+        [JsonProperty]
+        public DateTime CreationTime;
+        [JsonProperty]
+        public int NbUsage;
+        [JsonProperty]
+        public string ServerId;
     }
 }

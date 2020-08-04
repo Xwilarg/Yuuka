@@ -2,6 +2,7 @@
 using Discord.Commands;
 using DiscordUtils;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,8 +21,43 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = Context.User.ToString(),
-                Description = $"You uploaded {Program.P.Db.GetCount(Context.User.Id)} tags"
+                Description = $"You uploaded {Program.P.Db.GetCount(Context.User.Id.ToString())} tags"
             }.Build());
+        }
+
+        [Command("Tag")]
+        public async Task Tag(string tag)
+        {
+            var ttag = Program.P.Db.GetTag(tag);
+            if (ttag == null)
+                await ReplyAsync("This tag doesn't exist");
+            else
+            {
+                var type = ttag.Type.ToString();
+                await ReplyAsync(embed: new Discord.EmbedBuilder
+                {
+                    Color = Discord.Color.Blue,
+                    Title = char.ToUpper(tag[0]) + string.Join("", tag.Skip(1)).ToLower(),
+                    Fields = new List<Discord.EmbedFieldBuilder>
+                    {
+                        new Discord.EmbedFieldBuilder
+                        {
+                            Name = "Creation date",
+                            Value = ttag.CreationTime.ToString("yyyy/MM/dd HH:mm:ss")
+                        },
+                        new Discord.EmbedFieldBuilder
+                        {
+                            Name = "Number of use",
+                            Value = ttag.NbUsage
+                        },
+                        new Discord.EmbedFieldBuilder
+                        {
+                            Name = "Type",
+                            Value = type[0] + string.Join("", type.Skip(1)).ToLower()
+                        }
+                    }
+                }.Build());
+            }
         }
 
         [Command("Help")]
@@ -72,7 +108,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the image tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT))
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.IMAGE))
             }.Build());
         }
 
@@ -83,7 +119,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the audio tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT))
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.AUDIO))
             }.Build());
         }
 
@@ -182,7 +218,7 @@ namespace Yuuka.Modules
                 type = TagType.TEXT;
                 tContent = content;
             }
-            if (await Program.P.Db.AddTagAsync(type, key, Context.User, tContent, extension))
+            if (await Program.P.Db.AddTagAsync(type, key, Context.User, tContent, extension, Context.Guild.Id.ToString()))
                 await ReplyAsync("Your tag was created.");
             else
                 await ReplyAsync("This tag already exist.");
@@ -190,12 +226,11 @@ namespace Yuuka.Modules
 
         public static async Task Show(ICommandContext context, string key)
         {
-            var tag = Program.P.Db.GetTag(key);
-            if (!tag.HasValue)
+            var ttag = await Program.P.Db.SendTag(key);
+            if (ttag == null)
                 await context.Channel.SendMessageAsync("There is no tag with this name.");
             else
             {
-                var ttag = tag.Value;
                 if (ttag.Type == TagType.TEXT)
                     await context.Channel.SendMessageAsync((string)ttag.Content);
                 else if (ttag.Type == TagType.IMAGE)
