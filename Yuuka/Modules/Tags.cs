@@ -13,6 +13,17 @@ namespace Yuuka.Modules
 {
     public sealed class Tags : ModuleBase
     {
+        [Command("Count")]
+        public async Task Count()
+        {
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = Context.User.ToString(),
+                Description = $"You uploaded {Program.P.Db.GetCount(Context.User.Id)} tags"
+            }.Build());
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -24,6 +35,8 @@ namespace Yuuka.Modules
                     "Help: Display this help\n" +
                     "Info: Display information about the bot\n" +
                     "List: List all the tags\n" +
+                    "List text/image/audio: List all the text/image/audio tags\n" +
+                    "Count: See how many tags you uploaded\n" +
                     "Random: Suggest a random tag\n" +
                     "Random text/image/audio: Suggestion a random text/image/audio tag\n" +
                     "Create tagName tagConten: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment"
@@ -41,6 +54,39 @@ namespace Yuuka.Modules
             }.Build());
         }
 
+        [Command("List text")]
+        public async Task ListText()
+        {
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "List of all the text tags",
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT))
+            }.Build());
+        }
+
+        [Command("List image")]
+        public async Task ListImage()
+        {
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "List of all the image tags",
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT))
+            }.Build());
+        }
+
+        [Command("List audio")]
+        public async Task ListAudio()
+        {
+            await ReplyAsync(embed: new Discord.EmbedBuilder
+            {
+                Color = Discord.Color.Blue,
+                Title = "List of all the audio tags",
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT))
+            }.Build());
+        }
+
         [Command("Random"), Priority(1)]
         public async Task Random()
         {
@@ -50,7 +96,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = type[0] + string.Join("", type.Skip(1)).ToLower() + " tag suggestion",
-                Description = $"Try doing \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\""
             }.Build());
         }
 
@@ -62,7 +108,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "Text tag suggestion",
-                Description = $"Try doing \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\""
             }.Build());
         }
 
@@ -74,7 +120,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "Image tag suggestion",
-                Description = $"Try doing \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\""
             }.Build());
         }
 
@@ -86,13 +132,18 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "Audio tag suggestion",
-                Description = $"Try doing \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\""
             }.Build());
         }
 
         [Command("Create")]
         public async Task Create(string key, [Remainder]string content = "")
         {
+            if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_'))
+            {
+                await ReplyAsync("Your tag name can only contains alphanumeric characters and underscores");
+                return;
+            }
             object tContent;
             TagType type;
             string extension = null;

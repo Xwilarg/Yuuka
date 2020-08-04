@@ -72,12 +72,21 @@ namespace Yuuka.Database
             return new List<Tag>(_globalTags.Values).Select(x => x.Key).ToArray();
         }
 
+        public string[] GetListWithType(TagType type)
+        {
+            var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type);
+            return tags.Select(x => x.Key).ToArray();
+        }
+
         public Tag? GetTag(string key)
         {
             if (!_globalTags.ContainsKey(key))
                 return null;
             return _globalTags[key];
         }
+
+        public int GetCount(ulong userId)
+            => new List<Tag>(_globalTags.Values).Count(x => x.UserId == userId);
 
         private RethinkDB _r;
         private Connection _conn;
