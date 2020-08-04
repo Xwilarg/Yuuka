@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Yuuka.Database;
 
@@ -85,12 +86,29 @@ namespace Yuuka.Modules
                         IAudioClient audioClient = await guildUser.VoiceChannel.ConnectAsync();
                         if (!File.Exists("ffmpeg.exe"))
                             throw new FileNotFoundException("ffmpeg.exe was not found near the bot executable.");
+                        string vOutput = "";
                         string fileName = "audio" + Program.P.Rand.Next(0, 1000000) + ttag.Extension;
                         File.WriteAllBytes(fileName, (byte[])ttag.Content);
                         Process process = Process.Start(new ProcessStartInfo
                         {
                             FileName = "ffmpeg.exe",
-                            Arguments = $"-hide_banner -loglevel panic -i {fileName} -ac 2 -f s16le -ar 48000 pipe:",
+                            Arguments = $"-i {fileName} -filter:a volumedetect -f null /dev/null:",
+                            UseShellExecute = false,
+                            RedirectStandardError = true
+                        });
+                        process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+                        {
+                            vOutput += e.Data;
+                        };
+                        process.BeginErrorReadLine();
+                        process.WaitForExit();
+                        var match = Regex.Match(vOutput, "max_volume: ([-0-9.]+) dB");
+                        double volume = double.Parse(Regex.Match(vOutput, "mean_volume: ([-0-9.]+) dB").Groups[1].Value);
+                        double objective = -30 - volume;
+                        process = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "ffmpeg.exe",
+                            Arguments = $"-hide_banner -loglevel panic -i {fileName} -af volume={objective}dB -ac 2 -f s16le -ar 48000 pipe:",
                             UseShellExecute = false,
                             RedirectStandardOutput = true
                         });

@@ -4,8 +4,10 @@ using Discord.WebSocket;
 using DiscordUtils;
 using Newtonsoft.Json;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Yuuka.Database;
 using Yuuka.Modules;
@@ -49,6 +51,10 @@ namespace Yuuka
             HttpClient = new HttpClient();
             Db = new Db();
             await Db.InitAsync("Yuuka");
+
+            CultureInfo culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+            culture.NumberFormat.NumberDecimalSeparator = ".";
+            Thread.CurrentThread.CurrentCulture = culture;
 
             await _commands.AddModuleAsync<Communication>(null);
             await _commands.AddModuleAsync<Tags>(null);
