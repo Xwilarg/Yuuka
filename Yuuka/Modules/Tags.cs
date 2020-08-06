@@ -68,14 +68,14 @@ namespace Yuuka.Modules
                 Color = Discord.Color.Blue,
                 Title = "Help",
                 Description =
-                    "Help: Display this help\n" +
-                    "Info: Display information about the bot\n" +
-                    "List: List all the tags\n" +
-                    "List text/image/audio: List all the text/image/audio tags\n" +
-                    "Count: See how many tags you uploaded\n" +
-                    "Random: Suggest a random tag\n" +
-                    "Random text/image/audio: Suggestion a random text/image/audio tag\n" +
-                    "Create tagName tagConten: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment"
+                    "**Help**: Display this help\n" +
+                    "**Info**: Display information about the bot\n" +
+                    "**List**: List all the tags\n" +
+                    "**List text/image/audio**: List all the text/image/audio tags\n" +
+                    "**Count**: See how many tags you uploaded\n" +
+                    "**Random**: Suggest a random tag\n" +
+                    "**Random text/image/audio**: Suggestion a random text/image/audio tag\n" +
+                    "**Create tagName tagConten**: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment"
             }.Build());
         }
 
@@ -177,7 +177,7 @@ namespace Yuuka.Modules
         {
             if (!Program.P.Whitelist.Contains(Context.User.Id))
             {
-                await ReplyAsync("You are not whitelisted to create tags.");
+                await ReplyAsync("You need to be whitelisted to create tags. For this, please contact Zirk#0001 on Discord.");
                 return;
             }
             if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_'))
@@ -191,7 +191,7 @@ namespace Yuuka.Modules
             if (Context.Message.Attachments.Count > 0)
             {
                 var att = Context.Message.Attachments.ElementAt(0);
-                if (att.Size > 1000000)
+                if (att.Size > 8000000)
                 {
                     await ReplyAsync("Your file can't be more than 8MB.");
                     return;
