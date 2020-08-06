@@ -74,12 +74,12 @@ namespace Yuuka.Database
 
         public string[] GetList()
         {
-            return new List<Tag>(_globalTags.Values).Select(x => x.Key).ToArray();
+            return new List<Tag>(_globalTags.Values).Select(x => x.Key).OrderBy(x => x).ToArray();
         }
 
         public string[] GetListWithType(TagType type)
         {
-            var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type);
+            var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type).OrderBy(x => x);
             return tags.Select(x => x.Key).ToArray();
         }
 
