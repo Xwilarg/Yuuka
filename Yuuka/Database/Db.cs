@@ -51,7 +51,7 @@ namespace Yuuka.Database
         public async Task<bool> AddTagAsync<T>(TagType type, string key, IUser user, T content, string extension, string serverId)
         {
             key = key.ToLower();
-            if (await _r.Db(_dbName).Table("Tags").GetAll(key.GetHashCode()).Count().Eq(1).RunAsync<bool>(_conn))
+            if (_globalTags.ContainsKey(key))
                 return false;
 
             Tag tag = new Tag(key, type, user.ToString(), user.Id.ToString(), content, extension, false, DateTime.UtcNow, 0, serverId);
