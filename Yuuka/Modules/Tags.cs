@@ -47,8 +47,8 @@ namespace Yuuka.Modules
                         },
                         new Discord.EmbedFieldBuilder
                         {
-                            Name = "Number of use",
-                            Value = ttag.NbUsage
+                            Name = "Creator",
+                            Value = ttag.ServerId == Context.Guild.Id.ToString() ? ttag.User : "Not created in this server"
                         },
                         new Discord.EmbedFieldBuilder
                         {
@@ -70,6 +70,7 @@ namespace Yuuka.Modules
                 Description =
                     "**Help**: Display this help\n" +
                     "**Info**: Display information about the bot\n" +
+                    "**Tag tagName**: Display information about a tag" +
                     "**List**: List all the tags\n" +
                     "**List text/image/audio**: List all the text/image/audio tags\n" +
                     "**Count**: See how many tags you uploaded\n" +
