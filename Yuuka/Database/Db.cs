@@ -79,7 +79,7 @@ namespace Yuuka.Database
 
         public string[] GetListWithType(TagType type)
         {
-            var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type).OrderBy(x => x);
+            var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type).OrderBy(x => x.Key);
             return tags.Select(x => x.Key).ToArray();
         }
 
