@@ -271,10 +271,11 @@ namespace Yuuka.Modules
                         process.WaitForExit();
                         double volume = double.Parse(Regex.Match(vOutput, "mean_volume: ([-0-9.]+) dB").Groups[1].Value);
                         double objective = -30 - volume;
+                        string delay = Regex.Match(vOutput, "Duration: 00:00:00").Success ? ",\"adelay=1000|1000\"" : ""; // Add a delay if the audio is too short
                         process = Process.Start(new ProcessStartInfo
                         {
                             FileName = "ffmpeg.exe",
-                            Arguments = $"-hide_banner -loglevel panic -i {fileName} -af volume={objective}dB -ac 2 -f s16le -ar 48000 pipe:",
+                            Arguments = $"-hide_banner -loglevel panic -i {fileName} -af volume={objective}dB{delay} -ac 2 -f s16le -ar 48000 pipe:",
                             UseShellExecute = false,
                             RedirectStandardOutput = true
                         });
