@@ -25,6 +25,21 @@ namespace Yuuka.Modules
             }.Build());
         }
 
+        [Command("Description")]
+        public async Task Description(string tag, [Remainder]string description)
+        {
+            var ttag = Program.P.Db.GetTag(tag);
+            if (tag == null)
+                await ReplyAsync("This tag does not exist.");
+            else if (ttag.UserId != Context.User.Id.ToString())
+                await ReplyAsync("This tag wasn't created by you");
+            else
+            {
+                await Program.P.Db.SetDescriptionAsync(ttag, description);
+                await ReplyAsync("The description of the tag " + tag + " was updated.");
+            }
+        }
+
         [Command("Tag")]
         public async Task Tag(string tag)
         {
@@ -59,6 +74,11 @@ namespace Yuuka.Modules
                         {
                             Name = "Count",
                             Value = ttag.NbUsage
+                        },
+                        new Discord.EmbedFieldBuilder
+                        {
+                            Name = "Description",
+                            Value = ttag.Description
                         }
                     }
                 }.Build());
@@ -74,6 +94,7 @@ namespace Yuuka.Modules
                 Title = "Help",
                 Description =
                     "**Help**: Display this help\n" +
+                    "**Description**: Set the description in one of your tag\n" +
                     "**Info**: Display information about the bot\n" +
                     "**Tag tagName**: Display information about a tag" +
                     "**List**: List all the tags\n" +

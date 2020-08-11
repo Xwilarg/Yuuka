@@ -5,9 +5,10 @@ namespace Yuuka.Database
 {
     public class Tag
     {
-        public Tag(string key, TagType type, string user, string userId, object content, string extension, bool isNsfw, DateTime creationTime, int nbUsage, string serverId)
+        public Tag(string key, string description, TagType type, string user, string userId, object content, string extension, bool isNsfw, DateTime creationTime, int nbUsage, string serverId)
         {
             Key = key;
+            Description = description;
             Type = type;
             User = user;
             UserId = userId;
@@ -21,6 +22,8 @@ namespace Yuuka.Database
 
         [JsonProperty]
         public string Key;
+        [JsonProperty]
+        public string Description;
         [JsonProperty]
         public TagType Type;
         [JsonProperty]
