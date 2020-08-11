@@ -54,6 +54,11 @@ namespace Yuuka.Modules
                         {
                             Name = "Type",
                             Value = type[0] + string.Join("", type.Skip(1)).ToLower()
+                        },
+                        new Discord.EmbedFieldBuilder
+                        {
+                            Name = "Count",
+                            Value = ttag.NbUsage
                         }
                     }
                 }.Build());
@@ -220,7 +225,10 @@ namespace Yuuka.Modules
             else
             {
                 if (content == "")
+                {
+                    await ReplyAsync("You must give the content of your tag");
                     return;
+                }
                 type = TagType.TEXT;
                 tContent = content;
             }

@@ -7,7 +7,6 @@ namespace Yuuka.Database
     {
         public Tag(string key, TagType type, string user, string userId, object content, string extension, bool isNsfw, DateTime creationTime, int nbUsage, string serverId)
         {
-            id = key.GetHashCode().ToString();
             Key = key;
             Type = type;
             User = user;
@@ -20,8 +19,6 @@ namespace Yuuka.Database
             ServerId = serverId;
         }
 
-        [JsonProperty]
-        public string id;
         [JsonProperty]
         public string Key;
         [JsonProperty]
