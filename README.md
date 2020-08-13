@@ -19,14 +19,18 @@ tagContent can either be text, or an image/audio file (you'ld need to send it in
 <br/>
 The bot would then display the text/image or play the audio file in vocal channel
 
-## Invite link
-https://discord.com/api/oauth2/authorize?client_id=734788725388869742&scope=bot
-
-## Rules
-If you use the invite link below there are 2 rules you should know:
- - Tags are global, which mean they can be used between servers so don't send NSFW content or audio with sound too loud
- - My storage is limited so don't keep sending huge files
+## How to use the bot
+ - Go to the [release page](https://github.com/Xwilarg/Yuuka/releases) and download the latest available
+ - Create a [new bot application](https://discordpy.readthedocs.io/en/latest/discord.html)
+ - Start the bot
  
-## Being whitelisted
-Since the bot is still in a test phase, you need to be whitelisted to create tags.<br/>
-For this, please contact Zirk#0001 on Discord.
+**NOTE:**
+ - The tags you use are shared between all the servers the bot is in
+ - The bot use ReThinkdb to store the tags, by default it's use its own but you can also launch yours
+ - The bot will save all the tags in your computer (using the db) so please make note that creating a lot of them will therefor take some space
+
+## Need help?
+You can either:
+ - Come ask on the [support server](https://discordapp.com/invite/H6wMRYV)
+ - Open a [GitHub issue](https://github.com/Xwilarg/Yuuka/issues)
+ - Contact Zirk#0001 on Discord
