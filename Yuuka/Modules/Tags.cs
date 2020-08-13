@@ -231,7 +231,7 @@ namespace Yuuka.Modules
                         type = TagType.IMAGE;
                         tContent = await Program.P.HttpClient.GetByteArrayAsync(att.Url);
                     }
-                    else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg")
+                    else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg") // Theorically FFMPEG can handle way more than that
                     {
                         type = TagType.AUDIO;
                         tContent = await Program.P.HttpClient.GetByteArrayAsync(att.Url);
@@ -284,8 +284,12 @@ namespace Yuuka.Modules
                         if (!File.Exists("ffmpeg.exe"))
                             throw new FileNotFoundException("ffmpeg.exe was not found near the bot executable.");
                         string vOutput = "";
+
+                        // Download the file to play
                         string fileName = "audio" + Program.P.Rand.Next(0, 1000000) + ttag.Extension;
                         File.WriteAllBytes(fileName, (byte[])ttag.Content);
+
+                        // Get the current volume of the audio
                         Process process = Process.Start(new ProcessStartInfo
                         {
                             FileName = "ffmpeg.exe",
@@ -300,8 +304,12 @@ namespace Yuuka.Modules
                         process.BeginErrorReadLine();
                         process.WaitForExit();
                         double volume = double.Parse(Regex.Match(vOutput, "mean_volume: ([-0-9.]+) dB").Groups[1].Value);
+
+                        // Set the new volume so it's neither too loud, neither not enough
                         double objective = -30 - volume;
-                        string delay = Regex.Match(vOutput, "Duration: 00:00:00").Success ? ",\"adelay=1000|1000\"" : ""; // Add a delay if the audio is too short
+
+                        // Add a delay if the audio is too short, if we don't the audio is somehow not played
+                        string delay = Regex.Match(vOutput, "Duration: 00:00:00").Success ? ",\"adelay=1000|1000\"" : "";
                         process = Process.Start(new ProcessStartInfo
                         {
                             FileName = "ffmpeg.exe",

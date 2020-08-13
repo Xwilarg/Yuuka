@@ -21,19 +21,16 @@ namespace Yuuka
     public sealed class Program
     {
         public static async Task Main()
-            => await new Program().MainAsync();
+            => await new Program().MainAsync(); // Create a new instance of the bot
 
         public DiscordSocketClient Client { private set; get; }
         private readonly CommandService _commands = new CommandService();
-        public static Program P;
+        public static Program P; // Static reference to current class, to get the variables below
+
         public Random Rand { private set; get; }
-
         public DateTime StartTime { private set; get; }
-
         public HttpClient HttpClient { private set; get; }
-
         public Db Db { private set; get; }
-
         public ulong[] Whitelist { private set; get; }
 
         private Program()
@@ -48,6 +45,7 @@ namespace Yuuka
 
         private async Task MainAsync()
         {
+            // Init credentials
             string botToken;
             if (!File.Exists("Keys/Credentials.json"))
             {
@@ -65,6 +63,7 @@ namespace Yuuka
                 botToken = json.botToken;
             }
 
+            // Init whitelist
             if (!File.Exists("Keys/Whitelist.txt"))
             {
                 Whitelist = null;
@@ -75,6 +74,7 @@ namespace Yuuka
             else
                 Whitelist = File.ReadAllLines("Keys/Whitelist.txt").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => ulong.Parse(x.Split(new[] { "//" }, StringSplitOptions.None)[0].Trim())).ToArray();
 
+            // Init others variables
             P = this;
             Rand = new Random();
             HttpClient = new HttpClient();
@@ -87,10 +87,12 @@ namespace Yuuka
             {
                 if (!File.Exists("rethinkdb.exe"))
                     throw;
+                await Utils.Log(new LogMessage(LogSeverity.Warning, "Initialisation", "ReThinkdb not started, starting my own...", null));
                 Process.Start("rethinkdb.exe");
                 await Db.InitAsync("Yuuka");
             }
 
+            // MAke sure the coma separator is a '.' and not a ','
             CultureInfo culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             culture.NumberFormat.NumberDecimalSeparator = ".";
             Thread.CurrentThread.CurrentCulture = culture;
@@ -130,7 +132,7 @@ namespace Yuuka
                     _ = Task.Run(async () => {
                         try
                         {
-                            await Tags.Show(context, msg.Content.Substring(pos).ToLower());
+                            await Tags.Show(context, msg.Content.Substring(pos).ToLower()); // We do that here because we can't create an empty command
                         }
                         catch (Exception e)
                         {

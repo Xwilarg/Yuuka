@@ -28,6 +28,7 @@ namespace Yuuka.Database
             _globalTags = new Dictionary<string, Tag>();
             foreach (JObject elem in await _r.Db(_dbName).Table("Tags").RunAsync(_conn))
             {
+                // We load everything manually because we are not sure how to load "Content"
                 string id = elem["id"].Value<string>();
                 var type = (TagType)elem["Type"].Value<int>();
                 string description = elem["Description"] == null ? "" : elem["Description"].Value<string>();
@@ -50,6 +51,7 @@ namespace Yuuka.Database
             }
         }
 
+        // Try to add a tag, if it already exists it'll fail and return false
         public async Task<bool> AddTagAsync<T>(TagType type, string key, IUser user, T content, string extension, string serverId)
         {
             key = key.ToLower();
