@@ -34,3 +34,5 @@ You can either:
  - Come ask on the [support server](https://discordapp.com/invite/H6wMRYV)
  - Open a [GitHub issue](https://github.com/Xwilarg/Yuuka/issues)
  - Contact Zirk#0001 on Discord
+
+![Preview](Preview/Roomba.png)
