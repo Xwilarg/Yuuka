@@ -1,13 +1,16 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.Net;
 using Discord.WebSocket;
 using DiscordUtils;
 using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Yuuka.Database;
@@ -45,19 +48,48 @@ namespace Yuuka
 
         private async Task MainAsync()
         {
-            dynamic json = JsonConvert.DeserializeObject(File.ReadAllText("Keys/Credentials.json"));
-            if (json.botToken == null)
-                throw new NullReferenceException("Your Credentials.json is missing mandatory information, it must at least contains botToken and ownerId");
+            string botToken;
+            if (!File.Exists("Keys/Credentials.json"))
+            {
+                Console.WriteLine("Enter your bot token");
+                botToken = Console.ReadLine();
+                if (!Directory.Exists("Keys"))
+                    Directory.CreateDirectory("Keys");
+                File.WriteAllText("Keys/Credentials.json", "{\"botToken\": \"" + botToken + "\"}");
+                Console.Clear();
+                await Utils.Log(new LogMessage(LogSeverity.Info, "Initialisation", "Your bot token was saved at Keys/Credentials.json", null));
+            }
+            else
+            {
+                dynamic json = JsonConvert.DeserializeObject(File.ReadAllText("Keys/Credentials.json"));
+                botToken = json.botToken;
+            }
 
             if (!File.Exists("Keys/Whitelist.txt"))
-                throw new FileNotFoundException("Missing Whitelist file");
-            Whitelist = File.ReadAllLines("Keys/Whitelist.txt").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => ulong.Parse(x.Split(new[] { "//" }, StringSplitOptions.None)[0].Trim())).ToArray();
+            {
+                Whitelist = null;
+                await Utils.Log(new LogMessage(LogSeverity.Warning, "Initialisation", "You have no whitelist, that means that anyone will be able to create tags!\n" +
+                    "If you want to add one, create a file named \"Whitelist\" in the folder \"Keys\" and write the ID of users that can create tags.\n" +
+                    "If you don't know how to get user's ID, please refer to https://support.discord.com/hc/en-us/articles/206346498", null));
+            }
+            else
+                Whitelist = File.ReadAllLines("Keys/Whitelist.txt").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => ulong.Parse(x.Split(new[] { "//" }, StringSplitOptions.None)[0].Trim())).ToArray();
 
             P = this;
             Rand = new Random();
             HttpClient = new HttpClient();
             Db = new Db();
-            await Db.InitAsync("Yuuka");
+            try
+            {
+                await Db.InitAsync("Yuuka");
+            }
+            catch (SocketException)
+            {
+                if (!File.Exists("rethinkdb.exe"))
+                    throw;
+                Process.Start("rethinkdb.exe");
+                await Db.InitAsync("Yuuka");
+            }
 
             CultureInfo culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             culture.NumberFormat.NumberDecimalSeparator = ".";
@@ -69,7 +101,17 @@ namespace Yuuka
             Client.MessageReceived += HandleCommandAsync;
 
             StartTime = DateTime.Now;
-            await Client.LoginAsync(TokenType.Bot, (string)json.botToken);
+            try
+            {
+                await Client.LoginAsync(TokenType.Bot, botToken);
+            }
+            catch (HttpException)
+            {
+                await Utils.LogError(new LogMessage(LogSeverity.Critical, "Authentification", "An HTTP error occured, this probably means your token is invalid. If it's the case, please delete Keys/Credentials"));
+                Console.WriteLine("Press any to continue...");
+                Console.ReadKey();
+                return;
+            }
             await Client.StartAsync();
 
             await Task.Delay(-1);

@@ -78,7 +78,7 @@ namespace Yuuka.Modules
                         new Discord.EmbedFieldBuilder
                         {
                             Name = "Description",
-                            Value = ttag.Description
+                            Value = ttag.Description == "" ? "No description was added" : ttag.Description
                         }
                     }
                 }.Build());
@@ -94,7 +94,7 @@ namespace Yuuka.Modules
                 Title = "Help",
                 Description =
                     "**Help**: Display this help\n" +
-                    "**Description**: Set the description in one of your tag\n" +
+                    "**Description descriptionOfTheTag**: Set the description in one of your tag\n" +
                     "**Info**: Display information about the bot\n" +
                     "**Tag tagName**: Display information about a tag" +
                     "**List**: List all the tags\n" +
@@ -202,7 +202,7 @@ namespace Yuuka.Modules
         [Command("Create")]
         public async Task Create(string key, [Remainder]string content = "")
         {
-            if (!Program.P.Whitelist.Contains(Context.User.Id))
+            if (Program.P.Whitelist != null && !Program.P.Whitelist.Contains(Context.User.Id))
             {
                 await ReplyAsync("You need to be whitelisted to create tags. For this, please contact Zirk#0001 on Discord.");
                 return;

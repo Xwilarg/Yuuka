@@ -28,6 +28,7 @@ namespace Yuuka.Database
             _globalTags = new Dictionary<string, Tag>();
             foreach (JObject elem in await _r.Db(_dbName).Table("Tags").RunAsync(_conn))
             {
+                string id = elem["id"].Value<string>();
                 var type = (TagType)elem["Type"].Value<int>();
                 string description = elem["Description"] == null ? "" : elem["Description"].Value<string>();
                 string tag = elem["Key"].Value<string>();
@@ -45,7 +46,7 @@ namespace Yuuka.Database
                     content = (byte[])await _r.Binary(elem["Content"]).RunAsync<byte[]>(_conn);
                 }
                 string extension = elem["Extension"].Value<string>();
-                _globalTags.Add(tag, new Tag(tag, description, type, user, userId, content, extension, isNsfw, creationTime, nbUsage, serverId));
+                _globalTags.Add(tag, new Tag(id, tag, description, type, user, userId, content, extension, isNsfw, creationTime, nbUsage, serverId));
             }
         }
 
@@ -55,7 +56,7 @@ namespace Yuuka.Database
             if (_globalTags.ContainsKey(key))
                 return false;
 
-            Tag tag = new Tag(key, "", type, user.ToString(), user.Id.ToString(), content, extension, false, DateTime.UtcNow, 0, serverId);
+            Tag tag = new Tag((string)await _r.Uuid(key).RunAsync(_conn), key, "", type, user.ToString(), user.Id.ToString(), content, extension, false, DateTime.UtcNow, 0, serverId);
             await _r.Db(_dbName).Table("Tags").Insert(tag).RunAsync(_conn);
             _globalTags.Add(key, tag);
             return true;
