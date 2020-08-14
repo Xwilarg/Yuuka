@@ -114,9 +114,9 @@ namespace Yuuka.Database
                 return null;
             var tag = _globalTags[key];
             tag.NbUsage++;
-            await _r.Db(_dbName).Table("Tags").Update(_r.HashMap("id", tag.id)
+            _r.Db(_dbName).Table("Tags").Update(_r.HashMap("id", tag.id)
                 .With("NbUsage", tag.NbUsage)
-            ).RunAsync(_conn);
+            ).RunNoReply(_conn);
             return _globalTags[key];
         }
 
