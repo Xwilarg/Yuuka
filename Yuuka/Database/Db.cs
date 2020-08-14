@@ -113,6 +113,9 @@ namespace Yuuka.Database
         public int GetCount(string userId)
             => new List<Tag>(_globalTags.Values).Count(x => x.UserId == userId);
 
+        public int GetDescriptionCount(string userId)
+            => new List<Tag>(_globalTags.Values).Count(x => x.UserId == userId && x.Description != "");
+
         private RethinkDB _r;
         private Connection _conn;
         private string _dbName;

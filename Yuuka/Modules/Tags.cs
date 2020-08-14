@@ -21,7 +21,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = Context.User.ToString(),
-                Description = $"You uploaded {Program.P.Db.GetCount(Context.User.Id.ToString())} tags"
+                Description = $"You uploaded {Program.P.Db.GetCount(Context.User.Id.ToString())} tags\nIn the tags you uploaded, {Program.P.Db.GetDescriptionCount(Context.User.Id.ToString())} have a description set"
             }.Build());
         }
 
