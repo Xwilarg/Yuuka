@@ -83,7 +83,9 @@ namespace Yuuka.Database
         public async Task SetDescriptionAsync(Tag tag, string description)
         {
             tag.Description = description;
-            await _r.Db(_dbName).Table("Tags").Update(tag).RunAsync(_conn);
+            await _r.Db(_dbName).Table("Tags").Update(_r.HashMap("id", tag.id)
+                .With("Description", description)
+            ).RunAsync(_conn);
         }
 
         public string[] GetList()
@@ -112,7 +114,9 @@ namespace Yuuka.Database
                 return null;
             var tag = _globalTags[key];
             tag.NbUsage++;
-            await _r.Db(_dbName).Table("Tags").Update(tag).RunAsync(_conn);
+            await _r.Db(_dbName).Table("Tags").Update(_r.HashMap("id", tag.id)
+                .With("NbUsage", tag.NbUsage)
+            ).RunAsync(_conn);
             return _globalTags[key];
         }
 
