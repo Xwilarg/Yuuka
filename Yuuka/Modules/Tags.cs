@@ -154,6 +154,11 @@ namespace Yuuka.Modules
         public async Task Random()
         {
             var random = Program.P.Db.GetRandom();
+            if (random == null)
+            {
+                await ReplyAsync("There is no tag available");
+                return;
+            }
             var type = random.Type.ToString();
             await ReplyAsync(embed: new Discord.EmbedBuilder
             {
@@ -171,6 +176,11 @@ namespace Yuuka.Modules
         public async Task RandomText()
         {
             var random = Program.P.Db.GetRandomWithType(TagType.TEXT);
+            if (random == null)
+            {
+                await ReplyAsync("There is no text tag available");
+                return;
+            }
             await ReplyAsync(embed: new Discord.EmbedBuilder
             {
                 Color = Discord.Color.Blue,
@@ -187,6 +197,11 @@ namespace Yuuka.Modules
         public async Task RandomImage()
         {
             var random = Program.P.Db.GetRandomWithType(TagType.IMAGE);
+            if (random == null)
+            {
+                await ReplyAsync("There is no image tag available");
+                return;
+            }
             await ReplyAsync(embed: new Discord.EmbedBuilder
             {
                 Color = Discord.Color.Blue,
@@ -203,6 +218,11 @@ namespace Yuuka.Modules
         public async Task RandomAudio()
         {
             var random = Program.P.Db.GetRandomWithType(TagType.AUDIO);
+            if (random == null)
+            {
+                await ReplyAsync("There is no audio tag available");
+                return;
+            }
             await ReplyAsync(embed: new Discord.EmbedBuilder
             {
                 Color = Discord.Color.Blue,

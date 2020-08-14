@@ -67,12 +67,16 @@ namespace Yuuka.Database
 
         public Tag GetRandom()
         {
+            if (_globalTags.Values.Count == 0)
+                return null;
             return new List<Tag>(_globalTags.Values)[Program.P.Rand.Next(_globalTags.Values.Count)];
         }
 
         public Tag GetRandomWithType(TagType type)
         {
             var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type);
+            if (tags.Count() == 0)
+                return null;
             return tags.ElementAt(Program.P.Rand.Next(0, tags.Count()));
         }
 
@@ -95,6 +99,7 @@ namespace Yuuka.Database
 
         public Tag GetTag(string key)
         {
+            key = key.ToLower();
             if (!_globalTags.ContainsKey(key))
                 return null;
             return _globalTags[key];
@@ -102,6 +107,7 @@ namespace Yuuka.Database
 
         public async Task<Tag> SendTag(string key)
         {
+            key = key.ToLower();
             if (!_globalTags.ContainsKey(key))
                 return null;
             var tag = _globalTags[key];

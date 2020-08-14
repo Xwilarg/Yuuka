@@ -32,6 +32,7 @@ namespace Yuuka
         public HttpClient HttpClient { private set; get; }
         public Db Db { private set; get; }
         public ulong[] Whitelist { private set; get; }
+        private Process _process;
 
         private Program()
         {
@@ -41,6 +42,12 @@ namespace Yuuka
             });
             Client.Log += Utils.Log;
             _commands.Log += Utils.LogError;
+        }
+
+        ~Program()
+        {
+            if (_process != null && !_process.HasExited)
+                _process.Kill();
         }
 
         private async Task MainAsync()
@@ -79,6 +86,7 @@ namespace Yuuka
             Rand = new Random();
             HttpClient = new HttpClient();
             Db = new Db();
+            _process = null;
             try
             {
                 await Db.InitAsync("Yuuka");
@@ -88,7 +96,7 @@ namespace Yuuka
                 if (!File.Exists("rethinkdb.exe"))
                     throw;
                 await Utils.Log(new LogMessage(LogSeverity.Warning, "Initialisation", "ReThinkdb not started, starting my own...", null));
-                Process.Start("rethinkdb.exe");
+                _process = Process.Start("rethinkdb.exe");
                 await Db.InitAsync("Yuuka");
             }
 
@@ -137,6 +145,12 @@ namespace Yuuka
                         catch (Exception e)
                         {
                             await Utils.LogError(new LogMessage(LogSeverity.Error, e.Source, e.Message, e));
+                            await context.Channel.SendMessageAsync("", false, new EmbedBuilder()
+                            {
+                                Color = Color.Red,
+                                Title = e.GetType().ToString(),
+                                Description = "An error occured while executing last command.\nHere are some details about it: " + e.InnerException.Message
+                            }.Build());
                         }
                     });
             }
