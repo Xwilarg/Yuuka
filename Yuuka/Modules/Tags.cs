@@ -159,7 +159,11 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = type[0] + string.Join("", type.Skip(1)).ToLower() + " tag suggestion",
-                Description = $"Why not trying \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\"",
+                Footer = new Discord.EmbedFooterBuilder
+                {
+                    Text = random.Description
+                }
             }.Build());
         }
 
@@ -171,7 +175,11 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "Text tag suggestion",
-                Description = $"Why not trying \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\"",
+                Footer = new Discord.EmbedFooterBuilder
+                {
+                    Text = random.Description
+                }
             }.Build());
         }
 
@@ -183,7 +191,11 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "Image tag suggestion",
-                Description = $"Why not trying \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\"",
+                Footer = new Discord.EmbedFooterBuilder
+                {
+                    Text = random.Description
+                }
             }.Build());
         }
 
@@ -195,7 +207,11 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "Audio tag suggestion",
-                Description = $"Why not trying \"{random.Key}\""
+                Description = $"Why not trying \"{random.Key}\"",
+                Footer = new Discord.EmbedFooterBuilder
+                {
+                    Text = random.Description
+                }
             }.Build());
         }
 
