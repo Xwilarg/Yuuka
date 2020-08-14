@@ -297,7 +297,7 @@ namespace Yuuka.Modules
 
         public static async Task Show(ICommandContext context, string key)
         {
-            var ttag = await Program.P.Db.SendTag(key);
+            var ttag = Program.P.Db.SendTag(key);
             if (ttag == null)
                 await context.Channel.SendMessageAsync("There is no tag with this name.");
             else

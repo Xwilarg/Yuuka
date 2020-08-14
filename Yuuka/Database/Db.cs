@@ -107,7 +107,7 @@ namespace Yuuka.Database
             return _globalTags[key];
         }
 
-        public async Task<Tag> SendTag(string key)
+        public Tag SendTag(string key)
         {
             key = key.ToLower();
             if (!_globalTags.ContainsKey(key))
