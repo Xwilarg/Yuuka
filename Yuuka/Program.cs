@@ -145,9 +145,9 @@ namespace Yuuka
                 if (emote == "◀️") page--;
                 else if (emote == "▶️") page++;
                 var count = elem.Item2 == Database.TagType.NONE ? Db.Count() : Db.Count(elem.Item2);
-                if (page < 0 || page > count / 100)
+                if (page == 0 || page > (count / 100) + 1)
                     return;
-                if (page == count / 100 && count % 100 == 0)
+                if (page == (count / 100) + 1 && count % 100 == 0)
                     return;
                 string type = " ";
                 switch (elem.Item2)

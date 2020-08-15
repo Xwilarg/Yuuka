@@ -153,8 +153,11 @@ namespace Yuuka.Modules
         private async Task ListInternalAsync(Discord.Embed embed, TagType type)
         {
             var msg = await ReplyAsync(embed: embed);
-            Program.P.Messages.Add(msg.Id, new Tuple<int, TagType>(1, type));
-            await AddReactions(msg);
+            if ((type == TagType.NONE ? Program.P.Db.Count() : Program.P.Db.Count(type)) > 100)
+            {
+                Program.P.Messages.Add(msg.Id, new Tuple<int, TagType>(1, type));
+                await AddReactions(msg);
+            }
         }
 
         [Command("Random"), Priority(1)]

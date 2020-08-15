@@ -2,9 +2,9 @@
 {
     public enum TagType
     {
-        NONE,
         TEXT,
         IMAGE,
-        AUDIO
+        AUDIO,
+        NONE
     }
 }

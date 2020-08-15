@@ -43,9 +43,7 @@ namespace Yuuka.Database
                 if (type == TagType.TEXT)
                     content = elem["Content"].Value<string>();
                 else
-                {
                     content = (byte[])await _r.Binary(elem["Content"]).RunAsync<byte[]>(_conn);
-                }
                 string extension = elem["Extension"].Value<string>();
                 _globalTags.Add(tag, new Tag(id, tag, description, type, user, userId, content, extension, isNsfw, creationTime, nbUsage, serverId));
             }
@@ -90,13 +88,13 @@ namespace Yuuka.Database
 
         public string[] GetList(int count)
         {
-            return new List<Tag>(_globalTags.Values).Select(x => x.Key).OrderBy(x => x).Take(100 * count).ToArray();
+            return new List<Tag>(_globalTags.Values).Select(x => x.Key).OrderBy(x => x).Take(100 * count).Skip(100 * count - 100).ToArray();
         }
 
         public string[] GetListWithType(TagType type, int count)
         {
             var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type).OrderBy(x => x.Key);
-            return tags.Select(x => x.Key).Take(100 * count).ToArray();
+            return tags.Select(x => x.Key).Take(100 * count).Skip(100 * count - 100).ToArray();
         }
 
         public Tag GetTag(string key)
