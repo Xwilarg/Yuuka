@@ -12,7 +12,7 @@ using Yuuka.Database;
 
 namespace Yuuka.Modules
 {
-    public sealed class Tags : ModuleBase
+    public sealed partial class Tags : ModuleBase
     {
         [Command("Count")]
         public async Task Count()
@@ -109,45 +109,52 @@ namespace Yuuka.Modules
         [Command("List")]
         public async Task List()
         {
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ListInternalAsync(new Discord.EmbedBuilder
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the tags",
-                Description = string.Join(", ", Program.P.Db.GetList())
-            }.Build());
+                Description = string.Join(", ", Program.P.Db.GetList(1))
+            }.Build(), TagType.NONE);
         }
 
         [Command("List text")]
         public async Task ListText()
         {
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ListInternalAsync(new Discord.EmbedBuilder
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the text tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT))
-            }.Build());
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT, 1))
+            }.Build(), TagType.TEXT);
         }
 
         [Command("List image")]
         public async Task ListImage()
         {
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ListInternalAsync(new Discord.EmbedBuilder
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the image tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.IMAGE))
-            }.Build());
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.IMAGE, 1))
+            }.Build(), TagType.IMAGE);
         }
 
         [Command("List audio")]
         public async Task ListAudio()
         {
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ListInternalAsync(new Discord.EmbedBuilder
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the audio tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.AUDIO))
-            }.Build());
+                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.AUDIO, 1))
+            }.Build(), TagType.AUDIO);
+        }
+
+        private async Task ListInternalAsync(Discord.Embed embed, TagType type)
+        {
+            var msg = await ReplyAsync(embed: embed);
+            Program.P.Messages.Add(msg.Id, new Tuple<int, TagType>(1, type));
+            await AddReactions(msg);
         }
 
         [Command("Random"), Priority(1)]

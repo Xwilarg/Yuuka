@@ -88,15 +88,15 @@ namespace Yuuka.Database
             ).RunAsync(_conn);
         }
 
-        public string[] GetList()
+        public string[] GetList(int count)
         {
-            return new List<Tag>(_globalTags.Values).Select(x => x.Key).OrderBy(x => x).ToArray();
+            return new List<Tag>(_globalTags.Values).Select(x => x.Key).OrderBy(x => x).Take(100 * count).ToArray();
         }
 
-        public string[] GetListWithType(TagType type)
+        public string[] GetListWithType(TagType type, int count)
         {
             var tags = new List<Tag>(_globalTags.Values).Where(x => x.Type == type).OrderBy(x => x.Key);
-            return tags.Select(x => x.Key).ToArray();
+            return tags.Select(x => x.Key).Take(100 * count).ToArray();
         }
 
         public Tag GetTag(string key)
@@ -122,6 +122,12 @@ namespace Yuuka.Database
 
         public int GetCount(string userId)
             => new List<Tag>(_globalTags.Values).Count(x => x.UserId == userId);
+
+        public int Count()
+            => _globalTags.Count;
+
+        public int Count(TagType type)
+            => new List<Tag>(_globalTags.Values).Count(x => x.Type == type);
 
         public int GetDescriptionCount(string userId)
             => new List<Tag>(_globalTags.Values).Count(x => x.UserId == userId && x.Description != "");

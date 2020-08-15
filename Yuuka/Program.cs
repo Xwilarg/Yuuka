@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using DiscordUtils;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -33,6 +34,9 @@ namespace Yuuka
         public Db Db { private set; get; }
         public ulong[] Whitelist { private set; get; }
         private Process _process;
+
+        /// Key: msg id, Value: page, tag
+        public Dictionary<ulong, Tuple<int, Database.TagType>> Messages { private set; get; }
 
         private Program()
         {
@@ -81,6 +85,8 @@ namespace Yuuka
             else
                 Whitelist = File.ReadAllLines("Keys/Whitelist.txt").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => ulong.Parse(x.Split(new[] { "//" }, StringSplitOptions.None)[0].Trim())).ToArray();
 
+            Messages = new Dictionary<ulong, Tuple<int, Database.TagType>>();
+
             // Init others variables
             P = this;
             Rand = new Random();
@@ -109,6 +115,7 @@ namespace Yuuka
             await _commands.AddModuleAsync<Tags>(null);
 
             Client.MessageReceived += HandleCommandAsync;
+            Client.ReactionAdded += ReactionAdded;
 
             StartTime = DateTime.Now;
             try
@@ -127,6 +134,42 @@ namespace Yuuka
             await Task.Delay(-1);
         }
 
+        private async Task ReactionAdded(Cacheable<IUserMessage, ulong> msg, ISocketMessageChannel chan, SocketReaction react)
+        {
+            string emote = react.Emote.ToString();
+            if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "◀️" || emote == "▶️") && Messages.ContainsKey(msg.Id))
+            {
+                var elem = Messages[msg.Id];
+                var dMsg = await msg.GetOrDownloadAsync();
+                var page = elem.Item1;
+                if (emote == "◀️") page--;
+                else if (emote == "▶️") page++;
+                var count = elem.Item2 == Database.TagType.NONE ? Db.Count() : Db.Count(elem.Item2);
+                if (page < 0 || page > count / 100)
+                    return;
+                if (page == count / 100 && count % 100 == 0)
+                    return;
+                string type = " ";
+                switch (elem.Item2)
+                {
+                    case Database.TagType.TEXT: type = "text"; break;
+                    case Database.TagType.IMAGE: type = "image"; break;
+                    case Database.TagType.AUDIO: type = "audio"; break;
+                }
+                await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
+                {
+                    Color = Color.Blue,
+                    Title = $"List of all the{type} tags",
+                    Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(page) : Db.GetListWithType(elem.Item2, page))
+                }.Build());
+                Messages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
+                var author = dMsg.Author as IGuildUser;
+                var dChan = (IGuildChannel)dMsg.Channel;
+                if (author != null && author.GuildPermissions.ManageMessages)
+                    await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
+            }
+        }
+
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             SocketUserMessage msg = arg as SocketUserMessage;
@@ -137,7 +180,9 @@ namespace Yuuka
                 SocketCommandContext context = new SocketCommandContext(Client, msg);
                 var result = await _commands.ExecuteAsync(context, pos, null);
                 if (!result.IsSuccess && msg.Content.Split(' ').Length == 1) // Command failed & message have only one argument
-                    _ = Task.Run(async () => {
+                {
+                    _ = Task.Run(async () =>
+                    {
                         try
                         {
                             await Tags.Show(context, msg.Content.Substring(pos).ToLower()); // We do that here because we can't create an empty command
@@ -153,6 +198,7 @@ namespace Yuuka
                             }.Build());
                         }
                     });
+                }
             }
         }
     }
