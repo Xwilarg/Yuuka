@@ -307,6 +307,8 @@ namespace Yuuka.Modules
 
         public static async Task Show(ICommandContext context, string key)
         {
+            if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_')) // To avoid that the bot react at anything
+                return;
             var ttag = Program.P.Db.SendTag(key);
             if (ttag == null)
                 await context.Channel.SendMessageAsync("There is no tag with this name.");
