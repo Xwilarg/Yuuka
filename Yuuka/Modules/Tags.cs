@@ -307,7 +307,7 @@ namespace Yuuka.Modules
 
         public static async Task Show(ICommandContext context, string key)
         {
-            if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_')) // To avoid that the bot react at anything
+            if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_') || string.IsNullOrEmpty(key)) // To avoid that the bot react at anything
                 return;
             var ttag = Program.P.Db.SendTag(key);
             if (ttag == null)

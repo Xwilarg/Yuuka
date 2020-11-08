@@ -1,0 +1,11 @@
+[Unit]
+Description=Yuuka
+After=network-online.target rethinkdb.target
+
+[Service]
+ExecStart=dotnet /home/zirk/bots/Yuuka/Yuuka.dll
+WorkingDirectory=/home/zirk/bots/Yuuka
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
