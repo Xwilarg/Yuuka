@@ -329,8 +329,6 @@ namespace Yuuka.Modules
                     else
                     {
                         IAudioClient audioClient = await guildUser.VoiceChannel.ConnectAsync();
-                        if (!File.Exists("ffmpeg.exe"))
-                            throw new FileNotFoundException("ffmpeg.exe was not found near the bot executable.");
                         string vOutput = "";
 
                         // Download the file to play
@@ -340,7 +338,7 @@ namespace Yuuka.Modules
                         // Get the current volume of the audio
                         Process process = Process.Start(new ProcessStartInfo
                         {
-                            FileName = "ffmpeg.exe",
+                            FileName = "ffmpeg",
                             Arguments = $"-i {fileName} -filter:a volumedetect -f null /dev/null:",
                             UseShellExecute = false,
                             RedirectStandardError = true
@@ -360,7 +358,7 @@ namespace Yuuka.Modules
                         string delay = Regex.Match(vOutput, "Duration: 00:00:00").Success ? ",\"adelay=1000|1000\"" : "";
                         process = Process.Start(new ProcessStartInfo
                         {
-                            FileName = "ffmpeg.exe",
+                            FileName = "ffmpeg",
                             Arguments = $"-hide_banner -loglevel panic -i {fileName} -af volume={objective}dB{delay} -ac 2 -f s16le -ar 48000 pipe:",
                             UseShellExecute = false,
                             RedirectStandardOutput = true
