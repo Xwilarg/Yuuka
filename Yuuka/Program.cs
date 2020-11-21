@@ -116,6 +116,8 @@ namespace Yuuka
 
             Client.MessageReceived += HandleCommandAsync;
             Client.ReactionAdded += ReactionAdded;
+            Client.GuildAvailable += GuildJoined;
+            Client.JoinedGuild += GuildJoined;
 
             StartTime = DateTime.Now;
             try
@@ -137,6 +139,7 @@ namespace Yuuka
         private async Task ReactionAdded(Cacheable<IUserMessage, ulong> msg, ISocketMessageChannel chan, SocketReaction react)
         {
             string emote = react.Emote.ToString();
+            var guildId = (chan as ITextChannel).GuildId;
             if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "◀️" || emote == "▶️") && Messages.ContainsKey(msg.Id))
             {
                 var elem = Messages[msg.Id];
@@ -144,7 +147,7 @@ namespace Yuuka
                 var page = elem.Item1;
                 if (emote == "◀️") page--;
                 else if (emote == "▶️") page++;
-                var count = elem.Item2 == Database.TagType.NONE ? Db.Count() : Db.Count(elem.Item2);
+                var count = elem.Item2 == Database.TagType.NONE ? Db.Count(guildId) : Db.Count(guildId, elem.Item2);
                 if (page == 0 || page > (count / 100) + 1)
                     return;
                 if (page == (count / 100) + 1 && count % 100 == 0)
@@ -160,7 +163,7 @@ namespace Yuuka
                 {
                     Color = Color.Blue,
                     Title = $"List of all the{type} tags",
-                    Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(page) : Db.GetListWithType(elem.Item2, page))
+                    Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(guildId, page) : Db.GetListWithType(guildId, elem.Item2, page))
                 }.Build());
                 Messages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
                 var author = dMsg.Author as IGuildUser;
@@ -200,6 +203,11 @@ namespace Yuuka
                     });
                 }
             }
+        }
+
+        private async Task GuildJoined(SocketGuild guild)
+        {
+            await Db.InitGuildAsync(guild);
         }
     }
 }

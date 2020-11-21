@@ -21,21 +21,21 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = Context.User.ToString(),
-                Description = $"You uploaded {Program.P.Db.GetCount(Context.User.Id.ToString())} tags\nIn the tags you uploaded, {Program.P.Db.GetDescriptionCount(Context.User.Id.ToString())} have a description set"
+                Description = $"You uploaded {Program.P.Db.GetCount(Context.Guild.Id, Context.User.Id.ToString())} tags\nIn the tags you uploaded, {Program.P.Db.GetDescriptionCount(Context.Guild.Id, Context.User.Id.ToString())} have a description set"
             }.Build());
         }
 
         [Command("Description")]
         public async Task Description(string tag, [Remainder]string description)
         {
-            var ttag = Program.P.Db.GetTag(tag);
+            var ttag = Program.P.Db.GetTag(Context.Guild.Id, tag);
             if (tag == null)
                 await ReplyAsync("This tag does not exist.");
             else if (ttag.UserId != Context.User.Id.ToString())
                 await ReplyAsync("This tag wasn't created by you");
             else
             {
-                await Program.P.Db.SetDescriptionAsync(ttag, description);
+                await Program.P.Db.SetDescriptionAsync(Context.Guild.Id, ttag, description);
                 await ReplyAsync("The description of the tag " + tag + " was updated.");
             }
         }
@@ -43,7 +43,7 @@ namespace Yuuka.Modules
         [Command("Tag")]
         public async Task Tag(string tag)
         {
-            var ttag = Program.P.Db.GetTag(tag);
+            var ttag = Program.P.Db.GetTag(Context.Guild.Id, tag);
             if (ttag == null)
                 await ReplyAsync("This tag doesn't exist");
             else
@@ -113,7 +113,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the tags",
-                Description = string.Join(", ", Program.P.Db.GetList(1))
+                Description = string.Join(", ", Program.P.Db.GetList(Context.Guild.Id, 1))
             }.Build(), TagType.NONE);
         }
 
@@ -124,7 +124,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the text tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.TEXT, 1))
+                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, TagType.TEXT, 1))
             }.Build(), TagType.TEXT);
         }
 
@@ -135,7 +135,7 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the image tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.IMAGE, 1))
+                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, TagType.IMAGE, 1))
             }.Build(), TagType.IMAGE);
         }
 
@@ -146,14 +146,14 @@ namespace Yuuka.Modules
             {
                 Color = Discord.Color.Blue,
                 Title = "List of all the audio tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(TagType.AUDIO, 1))
+                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, TagType.AUDIO, 1))
             }.Build(), TagType.AUDIO);
         }
 
         private async Task ListInternalAsync(Discord.Embed embed, TagType type)
         {
             var msg = await ReplyAsync(embed: embed);
-            if ((type == TagType.NONE ? Program.P.Db.Count() : Program.P.Db.Count(type)) > 100)
+            if ((type == TagType.NONE ? Program.P.Db.Count(Context.Guild.Id) : Program.P.Db.Count(Context.Guild.Id, type)) > 100)
             {
                 Program.P.Messages.Add(msg.Id, new Tuple<int, TagType>(1, type));
                 await AddReactions(msg);
@@ -163,7 +163,7 @@ namespace Yuuka.Modules
         [Command("Random"), Priority(1)]
         public async Task Random()
         {
-            var random = Program.P.Db.GetRandom();
+            var random = Program.P.Db.GetRandom(Context.Guild.Id);
             if (random == null)
             {
                 await ReplyAsync("There is no tag available");
@@ -185,7 +185,7 @@ namespace Yuuka.Modules
         [Command("Random text"), Priority(1)]
         public async Task RandomText()
         {
-            var random = Program.P.Db.GetRandomWithType(TagType.TEXT);
+            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, TagType.TEXT);
             if (random == null)
             {
                 await ReplyAsync("There is no text tag available");
@@ -206,7 +206,7 @@ namespace Yuuka.Modules
         [Command("Random image"), Priority(1)]
         public async Task RandomImage()
         {
-            var random = Program.P.Db.GetRandomWithType(TagType.IMAGE);
+            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, TagType.IMAGE);
             if (random == null)
             {
                 await ReplyAsync("There is no image tag available");
@@ -227,7 +227,7 @@ namespace Yuuka.Modules
         [Command("Random audio"), Priority(1)]
         public async Task RandomAudio()
         {
-            var random = Program.P.Db.GetRandomWithType(TagType.AUDIO);
+            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, TagType.AUDIO);
             if (random == null)
             {
                 await ReplyAsync("There is no audio tag available");
@@ -299,7 +299,7 @@ namespace Yuuka.Modules
                 type = TagType.TEXT;
                 tContent = content;
             }
-            if (await Program.P.Db.AddTagAsync(type, key, Context.User, tContent, extension, Context.Guild.Id.ToString()))
+            if (await Program.P.Db.AddTagAsync(Context.Guild.Id, type, key, Context.User, tContent, extension, Context.Guild.Id.ToString()))
                 await ReplyAsync("Your tag was created.");
             else
                 await ReplyAsync("This tag already exist.");
@@ -309,7 +309,7 @@ namespace Yuuka.Modules
         {
             if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_') || string.IsNullOrEmpty(key)) // To avoid that the bot react at anything
                 return;
-            var ttag = Program.P.Db.SendTag(key);
+            var ttag = Program.P.Db.SendTag(context.Guild.Id, key);
             if (ttag == null)
                 await context.Channel.SendMessageAsync("There is no tag with this name.");
             else
