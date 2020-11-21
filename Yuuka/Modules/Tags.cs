@@ -14,14 +14,16 @@ namespace Yuuka.Modules
 {
     public sealed partial class Tags : ModuleBase
     {
-        [Command("Count")]
+        [Command("UserInfo")]
         public async Task Count()
         {
             await ReplyAsync(embed: new EmbedBuilder
             {
                 Color = Color.Blue,
                 Title = Context.User.ToString(),
-                Description = $"You uploaded {Program.P.Db.GetCount(Context.Guild.Id, Context.User.Id.ToString())} tags\nIn the tags you uploaded, {Program.P.Db.GetDescriptionCount(Context.Guild.Id, Context.User.Id.ToString())} have a description set"
+                Description = $"You uploaded {Program.P.Db.GetCount(Context.Guild.Id, Context.User.Id.ToString())} tags in this guild\n" +
+                    $"In these tags, {Program.P.Db.GetDescriptionCount(Context.Guild.Id, Context.User.Id.ToString())} have a description set\n" +
+                    $"All the tags you uploaded takes {(Program.P.Db.GetUploadSize(Context.User.Id.ToString()) / 1000000.0).ToString("0.00")} Mo in memory"
             }.Build());
         }
 
@@ -117,7 +119,7 @@ namespace Yuuka.Modules
                     "**Info tagName**: Display information about a tag\n" +
                     "**List**: List all the tags\n" +
                     "**List text/image/audio**: List all the text/image/audio tags\n" +
-                    "**Count**: See how many tags you uploaded\n" +
+                    "**UserInfo**: Get information about yourself\n" +
                     "**Random**: Suggest a random tag\n" +
                     "**Random text/image/audio**: Suggestion a random text/image/audio tag\n" +
                     "**Create tagName tagContent**: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment\n" +
@@ -150,7 +152,7 @@ namespace Yuuka.Modules
         [Command("List image")]
         public async Task ListImage()
         {
-            await ListInternalAsync(new Discord.EmbedBuilder
+            await ListInternalAsync(new EmbedBuilder
             {
                 Color = Color.Blue,
                 Title = "List of all the image tags",
