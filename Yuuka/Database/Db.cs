@@ -61,6 +61,29 @@ namespace Yuuka.Database
             _allTags.Add(guild.Id, gTags);
         }
 
+        public string CanDeleteTag(ulong guildId, ulong userId, string key)
+        {
+            var tags = _allTags[guildId];
+            key = key.ToLower();
+            if (!tags.Tags.ContainsKey(key))
+                return "This tag doesn't exist.";
+            if (tags.Tags[key].UserId != userId.ToString())
+                return "This tag wasn't created by you";
+            return null;
+        }
+
+        public async Task<bool> DeleteTagAsync(ulong guildId, ulong userId, string key)
+        {
+            if (CanDeleteTag(guildId, userId, key) != null)
+                return false;
+
+            var tags = _allTags[guildId];
+            key = key.ToLower();
+            tags.Tags.Remove(key);
+            await _r.Db(_dbName).Table("Tags-" + guildId).Filter(x => x["Key"] == key).Delete().RunAsync(_conn);
+            return true;
+        }
+
         // Try to add a tag, if it already exists it'll fail and return false
         public async Task<bool> AddTagAsync<T>(ulong guildId, TagType type, string key, IUser user, T content, string extension, string serverId)
         {

@@ -34,6 +34,7 @@ namespace Yuuka
         public Db Db { private set; get; }
         public ulong[] Whitelist { private set; get; }
         private Process _process;
+        public Dictionary<ulong, PendingDelete> PendingDelete { get; } = new Dictionary<ulong, PendingDelete>(); // Associate message id and PendingDelete
 
         /// Key: msg id, Value: page, tag
         public Dictionary<ulong, Tuple<int, Database.TagType>> Messages { private set; get; }
@@ -167,7 +168,31 @@ namespace Yuuka
                 }.Build());
                 Messages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
                 var author = dMsg.Author as IGuildUser;
-                var dChan = (IGuildChannel)dMsg.Channel;
+                if (author != null && author.GuildPermissions.ManageMessages)
+                    await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
+            }
+
+            if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "✅" || emote == "❌") && PendingDelete.ContainsKey(msg.Id))
+            {
+                var delete = PendingDelete[msg.Id];
+                if (delete.UserId != react.UserId)
+                    return;
+
+                var dMsg = await msg.GetOrDownloadAsync();
+                if (emote == "❌")
+                    await dMsg.DeleteAsync();
+                else
+                {
+                    await Db.DeleteTagAsync((chan as ITextChannel).GuildId, react.UserId, delete.Tag);
+                    await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
+                    {
+                        Title = "Your tag was deleted",
+                        Color = Color.Green
+                    }.Build());
+                }
+
+                PendingDelete.Remove(msg.Id);
+                var author = dMsg.Author as IGuildUser;
                 if (author != null && author.GuildPermissions.ManageMessages)
                     await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
             }

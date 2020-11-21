@@ -1,4 +1,5 @@
-﻿using Discord.Audio;
+﻿using Discord;
+using Discord.Audio;
 using Discord.Commands;
 using DiscordUtils;
 using System;
@@ -8,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Yuuka.Database;
 
 namespace Yuuka.Modules
 {
@@ -17,9 +17,9 @@ namespace Yuuka.Modules
         [Command("Count")]
         public async Task Count()
         {
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ReplyAsync(embed: new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = Context.User.ToString(),
                 Description = $"You uploaded {Program.P.Db.GetCount(Context.Guild.Id, Context.User.Id.ToString())} tags\nIn the tags you uploaded, {Program.P.Db.GetDescriptionCount(Context.Guild.Id, Context.User.Id.ToString())} have a description set"
             }.Build());
@@ -49,33 +49,33 @@ namespace Yuuka.Modules
             else
             {
                 var type = ttag.Type.ToString();
-                await ReplyAsync(embed: new Discord.EmbedBuilder
+                await ReplyAsync(embed: new EmbedBuilder
                 {
-                    Color = Discord.Color.Blue,
+                    Color = Color.Blue,
                     Title = char.ToUpper(tag[0]) + string.Join("", tag.Skip(1)).ToLower(),
-                    Fields = new List<Discord.EmbedFieldBuilder>
+                    Fields = new List<EmbedFieldBuilder>
                     {
-                        new Discord.EmbedFieldBuilder
+                        new EmbedFieldBuilder
                         {
                             Name = "Creation date",
                             Value = ttag.CreationTime.ToString("yyyy/MM/dd HH:mm:ss")
                         },
-                        new Discord.EmbedFieldBuilder
+                        new EmbedFieldBuilder
                         {
                             Name = "Creator",
                             Value = ttag.ServerId == Context.Guild.Id.ToString() ? ttag.User : "Not created in this server"
                         },
-                        new Discord.EmbedFieldBuilder
+                        new EmbedFieldBuilder
                         {
                             Name = "Type",
                             Value = type[0] + string.Join("", type.Skip(1)).ToLower()
                         },
-                        new Discord.EmbedFieldBuilder
+                        new EmbedFieldBuilder
                         {
                             Name = "Count",
                             Value = ttag.NbUsage
                         },
-                        new Discord.EmbedFieldBuilder
+                        new EmbedFieldBuilder
                         {
                             Name = "Description",
                             Value = ttag.Description == "" ? "No description was added" : ttag.Description
@@ -88,44 +88,45 @@ namespace Yuuka.Modules
         [Command("Help")]
         public async Task Help()
         {
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ReplyAsync(embed: new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "Help",
                 Description =
                     "**Help**: Display this help\n" +
                     "**Description descriptionOfTheTag**: Set the description in one of your tag\n" +
                     "**Info**: Display information about the bot\n" +
-                    "**Tag tagName**: Display information about a tag" +
+                    "**Tag tagName**: Display information about a tag\n" +
                     "**List**: List all the tags\n" +
                     "**List text/image/audio**: List all the text/image/audio tags\n" +
                     "**Count**: See how many tags you uploaded\n" +
                     "**Random**: Suggest a random tag\n" +
                     "**Random text/image/audio**: Suggestion a random text/image/audio tag\n" +
-                    "**Create tagName tagConten**: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment"
+                    "**Create tagName tagContent**: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment\n" +
+                    "**Delete tagName**: Delete an existing tag"
             }.Build());
         }
 
         [Command("List")]
         public async Task List()
         {
-            await ListInternalAsync(new Discord.EmbedBuilder
+            await ListInternalAsync(new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "List of all the tags",
                 Description = string.Join(", ", Program.P.Db.GetList(Context.Guild.Id, 1))
-            }.Build(), TagType.NONE);
+            }.Build(), Database.TagType.NONE);
         }
 
         [Command("List text")]
         public async Task ListText()
         {
-            await ListInternalAsync(new Discord.EmbedBuilder
+            await ListInternalAsync(new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "List of all the text tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, TagType.TEXT, 1))
-            }.Build(), TagType.TEXT);
+                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, Database.TagType.TEXT, 1))
+            }.Build(), Database.TagType.TEXT);
         }
 
         [Command("List image")]
@@ -133,29 +134,29 @@ namespace Yuuka.Modules
         {
             await ListInternalAsync(new Discord.EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "List of all the image tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, TagType.IMAGE, 1))
-            }.Build(), TagType.IMAGE);
+                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, Database.TagType.IMAGE, 1))
+            }.Build(), Database.TagType.IMAGE);
         }
 
         [Command("List audio")]
         public async Task ListAudio()
         {
-            await ListInternalAsync(new Discord.EmbedBuilder
+            await ListInternalAsync(new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "List of all the audio tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, TagType.AUDIO, 1))
-            }.Build(), TagType.AUDIO);
+                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, Database.TagType.AUDIO, 1))
+            }.Build(), Database.TagType.AUDIO);
         }
 
-        private async Task ListInternalAsync(Discord.Embed embed, TagType type)
+        private async Task ListInternalAsync(Embed embed, Database.TagType type)
         {
             var msg = await ReplyAsync(embed: embed);
-            if ((type == TagType.NONE ? Program.P.Db.Count(Context.Guild.Id) : Program.P.Db.Count(Context.Guild.Id, type)) > 100)
+            if ((type == Database.TagType.NONE ? Program.P.Db.Count(Context.Guild.Id) : Program.P.Db.Count(Context.Guild.Id, type)) > 100)
             {
-                Program.P.Messages.Add(msg.Id, new Tuple<int, TagType>(1, type));
+                Program.P.Messages.Add(msg.Id, new Tuple<int, Database.TagType>(1, type));
                 await AddReactions(msg);
             }
         }
@@ -170,12 +171,12 @@ namespace Yuuka.Modules
                 return;
             }
             var type = random.Type.ToString();
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ReplyAsync(embed: new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = type[0] + string.Join("", type.Skip(1)).ToLower() + " tag suggestion",
                 Description = $"Why not trying \"{random.Key}\"",
-                Footer = new Discord.EmbedFooterBuilder
+                Footer = new EmbedFooterBuilder
                 {
                     Text = random.Description
                 }
@@ -185,18 +186,18 @@ namespace Yuuka.Modules
         [Command("Random text"), Priority(1)]
         public async Task RandomText()
         {
-            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, TagType.TEXT);
+            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, Database.TagType.TEXT);
             if (random == null)
             {
                 await ReplyAsync("There is no text tag available");
                 return;
             }
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ReplyAsync(embed: new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "Text tag suggestion",
                 Description = $"Why not trying \"{random.Key}\"",
-                Footer = new Discord.EmbedFooterBuilder
+                Footer = new EmbedFooterBuilder
                 {
                     Text = random.Description
                 }
@@ -206,18 +207,18 @@ namespace Yuuka.Modules
         [Command("Random image"), Priority(1)]
         public async Task RandomImage()
         {
-            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, TagType.IMAGE);
+            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, Database.TagType.IMAGE);
             if (random == null)
             {
                 await ReplyAsync("There is no image tag available");
                 return;
             }
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ReplyAsync(embed: new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "Image tag suggestion",
                 Description = $"Why not trying \"{random.Key}\"",
-                Footer = new Discord.EmbedFooterBuilder
+                Footer = new EmbedFooterBuilder
                 {
                     Text = random.Description
                 }
@@ -227,22 +228,44 @@ namespace Yuuka.Modules
         [Command("Random audio"), Priority(1)]
         public async Task RandomAudio()
         {
-            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, TagType.AUDIO);
+            var random = Program.P.Db.GetRandomWithType(Context.Guild.Id, Database.TagType.AUDIO);
             if (random == null)
             {
                 await ReplyAsync("There is no audio tag available");
                 return;
             }
-            await ReplyAsync(embed: new Discord.EmbedBuilder
+            await ReplyAsync(embed: new EmbedBuilder
             {
-                Color = Discord.Color.Blue,
+                Color = Color.Blue,
                 Title = "Audio tag suggestion",
                 Description = $"Why not trying \"{random.Key}\"",
-                Footer = new Discord.EmbedFooterBuilder
+                Footer = new EmbedFooterBuilder
                 {
                     Text = random.Description
                 }
             }.Build());
+        }
+
+        [Command("Delete")]
+        public async Task Delete(string key)
+        {
+            var error = Program.P.Db.CanDeleteTag(Context.Guild.Id, Context.User.Id, key);
+            if (error != null)
+                await ReplyAsync(error);
+            else
+            {
+                var reply = await ReplyAsync(embed: new EmbedBuilder
+                {
+                    Title = $"Are you sure you want to delete {key}?",
+                    Color = Color.Blue
+                }.Build());
+                Program.P.PendingDelete.Add(reply.Id, new PendingDelete
+                {
+                    Tag = key,
+                    UserId = Context.User.Id
+                });
+                await reply.AddReactionsAsync(new[] { new Emoji("✅"), new Emoji("❌") });
+            }
         }
 
         [Command("Create")]
@@ -259,7 +282,7 @@ namespace Yuuka.Modules
                 return;
             }
             object tContent;
-            TagType type;
+            Database.TagType type;
             string extension = null;
             if (Context.Message.Attachments.Count > 0)
             {
@@ -274,12 +297,12 @@ namespace Yuuka.Modules
                     extension = Utils.GetExtension(att.Filename);
                     if (Utils.IsImage(extension))
                     {
-                        type = TagType.IMAGE;
+                        type = Database.TagType.IMAGE;
                         tContent = await Program.P.HttpClient.GetByteArrayAsync(att.Url);
                     }
                     else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg") // Theorically FFMPEG can handle way more than that
                     {
-                        type = TagType.AUDIO;
+                        type = Database.TagType.AUDIO;
                         tContent = await Program.P.HttpClient.GetByteArrayAsync(att.Url);
                     }
                     else
@@ -296,7 +319,7 @@ namespace Yuuka.Modules
                     await ReplyAsync("You must give the content of your tag");
                     return;
                 }
-                type = TagType.TEXT;
+                type = Yuuka.Database.TagType.TEXT;
                 tContent = content;
             }
             if (await Program.P.Db.AddTagAsync(Context.Guild.Id, type, key, Context.User, tContent, extension, Context.Guild.Id.ToString()))
@@ -314,14 +337,14 @@ namespace Yuuka.Modules
                 await context.Channel.SendMessageAsync("There is no tag with this name.");
             else
             {
-                if (ttag.Type == TagType.TEXT)
+                if (ttag.Type == Database.TagType.TEXT)
                     await context.Channel.SendMessageAsync((string)ttag.Content);
-                else if (ttag.Type == TagType.IMAGE)
+                else if (ttag.Type == Database.TagType.IMAGE)
                 {
                     using MemoryStream ms = new MemoryStream((byte[])ttag.Content);
                     await context.Channel.SendFileAsync(ms, "Image" + ttag.Extension);
                 }
-                else if (ttag.Type == TagType.AUDIO)
+                else if (ttag.Type == Database.TagType.AUDIO)
                 {
                     Discord.IGuildUser guildUser = context.User as Discord.IGuildUser;
                     if (guildUser.VoiceChannel == null)
