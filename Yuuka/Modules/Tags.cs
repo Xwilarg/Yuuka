@@ -23,7 +23,7 @@ namespace Yuuka.Modules
                 Title = Context.User.ToString(),
                 Description = $"You uploaded {Program.P.Db.GetCount(Context.Guild.Id, Context.User.Id.ToString())} tags in this guild\n" +
                     $"In these tags, {Program.P.Db.GetDescriptionCount(Context.Guild.Id, Context.User.Id.ToString())} have a description set\n" +
-                    $"All the tags you uploaded takes {(Program.P.Db.GetUploadSize(Context.User.Id.ToString()) / 1000000.0).ToString("0.00")} Mo in memory"
+                    $"All the tags you uploaded takes {(Program.P.Db.GetUploadSize(Context.User.Id.ToString()) / 1000000.0).ToString("0.00")} MB in memory"
             }.Build());
         }
 
