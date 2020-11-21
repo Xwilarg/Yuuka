@@ -40,7 +40,7 @@ namespace Yuuka.Modules
             }
         }
 
-        [Command("Tag")]
+        [Command("Tag"), Alias("Info")]
         public async Task Tag(string tag)
         {
             var ttag = Program.P.Db.GetTag(Context.Guild.Id, tag);
@@ -49,39 +49,57 @@ namespace Yuuka.Modules
             else
             {
                 var type = ttag.Type.ToString();
-                await ReplyAsync(embed: new EmbedBuilder
+                var list = new List<EmbedFieldBuilder>
+                {
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Creation date",
+                        Value = ttag.CreationTime.ToString("yyyy/MM/dd HH:mm:ss"),
+                        IsInline = true
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Creator",
+                        Value = ttag.User,
+                        IsInline = true
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Type",
+                        Value = type[0] + string.Join("", type.Skip(1)).ToLower(),
+                        IsInline = true
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Count",
+                        Value = ttag.NbUsage,
+                        IsInline = true
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Description",
+                        Value = ttag.Description == "" ? "No description was added" : ttag.Description
+                    }
+                };
+                if (ttag.Type == Database.TagType.TEXT)
+                    list.Add(new EmbedFieldBuilder
+                    {
+                        Name = "Content",
+                        Value = (string)ttag.Content
+                    });
+                var embed = new EmbedBuilder
                 {
                     Color = Color.Blue,
                     Title = char.ToUpper(tag[0]) + string.Join("", tag.Skip(1)).ToLower(),
-                    Fields = new List<EmbedFieldBuilder>
-                    {
-                        new EmbedFieldBuilder
-                        {
-                            Name = "Creation date",
-                            Value = ttag.CreationTime.ToString("yyyy/MM/dd HH:mm:ss")
-                        },
-                        new EmbedFieldBuilder
-                        {
-                            Name = "Creator",
-                            Value = ttag.ServerId == Context.Guild.Id.ToString() ? ttag.User : "Not created in this server"
-                        },
-                        new EmbedFieldBuilder
-                        {
-                            Name = "Type",
-                            Value = type[0] + string.Join("", type.Skip(1)).ToLower()
-                        },
-                        new EmbedFieldBuilder
-                        {
-                            Name = "Count",
-                            Value = ttag.NbUsage
-                        },
-                        new EmbedFieldBuilder
-                        {
-                            Name = "Description",
-                            Value = ttag.Description == "" ? "No description was added" : ttag.Description
-                        }
-                    }
-                }.Build());
+                    Fields = list
+                }.Build();
+                if (ttag.Type == Database.TagType.IMAGE)
+                {
+                    using MemoryStream ms = new MemoryStream((byte[])ttag.Content);
+                    await Context.Channel.SendFileAsync(ms, "Image" + ttag.Extension, embed: embed);
+                }
+                else
+                    await ReplyAsync(embed: embed);
             }
         }
 
@@ -95,8 +113,8 @@ namespace Yuuka.Modules
                 Description =
                     "**Help**: Display this help\n" +
                     "**Description descriptionOfTheTag**: Set the description in one of your tag\n" +
-                    "**Info**: Display information about the bot\n" +
-                    "**Tag tagName**: Display information about a tag\n" +
+                    "**BotInfo**: Display information about the bot\n" +
+                    "**Info tagName**: Display information about a tag\n" +
                     "**List**: List all the tags\n" +
                     "**List text/image/audio**: List all the text/image/audio tags\n" +
                     "**Count**: See how many tags you uploaded\n" +
@@ -346,7 +364,7 @@ namespace Yuuka.Modules
                 }
                 else if (ttag.Type == Database.TagType.AUDIO)
                 {
-                    Discord.IGuildUser guildUser = context.User as Discord.IGuildUser;
+                    IGuildUser guildUser = context.User as IGuildUser;
                     if (guildUser.VoiceChannel == null)
                         await context.Channel.SendMessageAsync("You must be in a vocal channel for vocal tags.");
                     else
