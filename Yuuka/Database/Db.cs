@@ -98,6 +98,11 @@ namespace Yuuka.Database
             }
         }
 
+        public long GetAllUploadSize()
+        {
+            return _uploadSize.Values.Sum();
+        }
+
         public long GetUploadSize(string userId)
         {
             return !_uploadSize.ContainsKey(userId) ? 0L : _uploadSize[userId];
