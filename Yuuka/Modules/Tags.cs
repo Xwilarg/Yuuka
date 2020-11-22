@@ -121,6 +121,12 @@ namespace Yuuka.Modules
             }
         }
 
+        [Command("Invite")]
+        public async Task Invite()
+        {
+            await ReplyAsync("https://discord.com/oauth2/authorize?client_id=" + Program.P.Client.CurrentUser.Id + "&permissions=3196928&scope=bot");
+        }
+
         [Command("Help")]
         public async Task Help()
         {
@@ -150,6 +156,7 @@ namespace Yuuka.Modules
                     "**Whitelist none**: Remove the whitelist for your server (allow everyone to create tags)\n" +
                     "**Whitelist listOfRoleIds**: Add a whitelist for your server (only the specified roles can create tags)\n" +
                     "**BotInfo**: Display information about the bot\n" +
+                    "**Invite**: Get the invite link of the bot\n" +
                     "**Help**: Display this help\n"
             }.Build());
         }
