@@ -304,7 +304,7 @@ namespace Yuuka.Modules
         [Command("Delete")]
         public async Task Delete(string key)
         {
-            var error = Program.P.Db.CanDeleteTag(Context.Guild, Context.User.Id, key);
+            var error = Program.P.Db.CanDeleteTag(Context.Guild, Context.User as IGuildUser, key);
             if (error != null)
                 await ReplyAsync(error);
             else
@@ -313,7 +313,7 @@ namespace Yuuka.Modules
                 {
                     Title = $"Are you sure you want to delete {key}?",
                     Color = Color.Blue,
-                    Footer = Context.User.Id == Context.Guild.OwnerId ? new EmbedFooterBuilder
+                    Footer = (Context.User.Id == Context.Guild.OwnerId || (Context.User as IGuildUser).GuildPermissions.ManageGuild) ? new EmbedFooterBuilder
                     {
                         Text = "As the server owner, you are allowed to delete tags from everyone"
                     } : null

@@ -17,6 +17,7 @@ namespace Yuuka.Database
         public Db()
         {
             _r = RethinkDB.R;
+            _guilds = new Dictionary<ulong, Guild>();
         }
 
         public async Task InitAsync(string dbName)
@@ -25,22 +26,36 @@ namespace Yuuka.Database
             _conn = await _r.Connection().ConnectAsync();
             if (!await _r.DbList().Contains(_dbName).RunAsync<bool>(_conn))
                 _r.DbCreate(_dbName).Run(_conn);
+            if (!await _r.Db(_dbName).TableList().Contains("Guilds").RunAsync<bool>(_conn))
+                _r.Db(_dbName).TableCreate("Guilds").Run(_conn);
 
             _allTags = new Dictionary<ulong, GuildTags>();
             _uploadSize = new Dictionary<string, long>();
             _uploadSizeGuild = new Dictionary<string, long>();
         }
 
-        public async Task InitGuildAsync(SocketGuild guild)
+        public async Task InitGuildAsync(SocketGuild sGuild)
         {
-            if (_allTags.ContainsKey(guild.Id)) // Guild already loaded
+            if (_allTags.ContainsKey(sGuild.Id)) // Guild already loaded
                 return;
 
-            if (!await _r.Db(_dbName).TableList().Contains("Tags-" + guild.Id).RunAsync<bool>(_conn))
-                _r.Db(_dbName).TableCreate("Tags-" + guild.Id).Run(_conn);
+            Guild guild;
+            if (await _r.Db(_dbName).Table("Guilds").GetAll(sGuild.Id.ToString()).Count().Eq(0).RunAsync<bool>(_conn)) // Guild doesn't exist in db
+            {
+                guild = new Guild(sGuild.Id.ToString());
+                await _r.Db(_dbName).Table("Guilds").Insert(guild).RunAsync(_conn);
+            }
+            else
+            {
+                guild = await _r.Db(_dbName).Table("Guilds").Get(sGuild.Id.ToString()).RunAsync<Guild>(_conn);
+            }
+            _guilds.Add(sGuild.Id, guild);
+
+            if (!await _r.Db(_dbName).TableList().Contains("Tags-" + sGuild.Id).RunAsync<bool>(_conn))
+                _r.Db(_dbName).TableCreate("Tags-" + sGuild.Id).Run(_conn);
 
             var gTags = new GuildTags();
-            foreach (JObject elem in await _r.Db(_dbName).Table("Tags-" + guild.Id).RunAsync(_conn))
+            foreach (JObject elem in await _r.Db(_dbName).Table("Tags-" + sGuild.Id).RunAsync(_conn))
             {
                 // We load everything manually because we are not sure how to load "Content"
                 string id = elem["id"].Value<string>();
@@ -65,7 +80,7 @@ namespace Yuuka.Database
                 gTags.Tags.Add(tag, new Tag(id, tag, description, type, user, userId, content, extension, isNsfw, creationTime, nbUsage, serverId));
             }
 
-            _allTags.Add(guild.Id, gTags);
+            _allTags.Add(sGuild.Id, gTags);
         }
 
         public void AddUploadSize(string userId, string guildId, object content)
@@ -113,20 +128,20 @@ namespace Yuuka.Database
             return !_uploadSizeGuild.ContainsKey(guildId) ? 0L : _uploadSizeGuild[guildId];
         }
 
-        public string CanDeleteTag(IGuild guild, ulong userId, string key)
+        public string CanDeleteTag(IGuild guild, IGuildUser user, string key)
         {
             var tags = _allTags[guild.Id];
             key = key.ToLower();
             if (!tags.Tags.ContainsKey(key))
                 return "This tag doesn't exist.";
-            if (tags.Tags[key].UserId != userId.ToString() && userId != guild.OwnerId)
+            if (tags.Tags[key].UserId != user.Id.ToString() && (user.Id != guild.OwnerId || user.GuildPermissions.ManageGuild))
                 return "This tag wasn't created by you";
             return null;
         }
 
-        public async Task<bool> DeleteTagAsync(IGuild guild, ulong userId, string key)
+        public async Task<bool> DeleteTagAsync(IGuild guild, IGuildUser user, string key)
         {
-            if (CanDeleteTag(guild, userId, key) != null)
+            if (CanDeleteTag(guild, user, key) != null)
                 return false;
 
             var tags = _allTags[guild.Id];
@@ -134,7 +149,7 @@ namespace Yuuka.Database
             key = key.ToLower();
             tags.Tags.Remove(key);
             await _r.Db(_dbName).Table("Tags-" + guild.Id).Filter(x => x["Key"] == key).Delete().RunAsync(_conn);
-            RemoveUploadSize(userId.ToString(), guild.Id.ToString(), curr.Content);
+            RemoveUploadSize(user.Id.ToString(), guild.Id.ToString(), curr.Content);
             return true;
         }
 
@@ -223,10 +238,21 @@ namespace Yuuka.Database
         public int GetDescriptionCount(ulong guildId, string userId)
             => new List<Tag>(_allTags[guildId].Tags.Values).Count(x => x.UserId == userId && x.Description != "");
 
+        public async Task UpdatePrefixAsync(ulong guildId, string prefix)
+        {
+            _guilds[guildId].Prefix = prefix;
+            await _r.Db(_dbName).Table("Guilds").Update(_r.HashMap("id", guildId.ToString())
+                .With("Prefix", prefix)
+            ).RunAsync(_conn);
+        }
+
+        public Guild GetGuild(ulong id) => _guilds[id];
+
         private RethinkDB _r;
         private Connection _conn;
         private string _dbName;
 
+        private Dictionary<ulong, Guild> _guilds;
         private Dictionary<ulong, GuildTags> _allTags;
         private Dictionary<string, long> _uploadSize;
         private Dictionary<string, long> _uploadSizeGuild;

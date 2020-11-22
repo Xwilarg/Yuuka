@@ -116,6 +116,7 @@ namespace Yuuka
 
             await _commands.AddModuleAsync<Communication>(null);
             await _commands.AddModuleAsync<Tags>(null);
+            await _commands.AddModuleAsync<Setting>(null);
 
             Client.MessageReceived += HandleCommandAsync;
             Client.ReactionAdded += ReactionAdded;
@@ -219,7 +220,7 @@ namespace Yuuka
                         await dMsg.DeleteAsync();
                     else
                     {
-                        await Db.DeleteTagAsync((chan as ITextChannel).Guild, react.UserId, delete.Tag);
+                        await Db.DeleteTagAsync((chan as ITextChannel).Guild, react.User.Value as IGuildUser, delete.Tag);
                         await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
                         {
                             Title = "Your tag was deleted",
@@ -240,7 +241,10 @@ namespace Yuuka
             SocketUserMessage msg = arg as SocketUserMessage;
             if (msg == null || arg.Author.IsBot) return;
             int pos = 0;
-            if (msg.HasMentionPrefix(Client.CurrentUser, ref pos) || msg.HasStringPrefix(".", ref pos))
+            ITextChannel textChan = msg.Channel as ITextChannel;
+            if (textChan == null) // Can't send message in PM
+                return;
+            if (msg.HasMentionPrefix(Client.CurrentUser, ref pos) || msg.HasStringPrefix(Db.GetGuild(textChan.GuildId).Prefix, ref pos))
             {
                 SocketCommandContext context = new SocketCommandContext(Client, msg);
                 var result = await _commands.ExecuteAsync(context, pos, null);
