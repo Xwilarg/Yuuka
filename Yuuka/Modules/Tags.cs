@@ -14,7 +14,7 @@ namespace Yuuka.Modules
 {
     public sealed partial class Tags : ModuleBase
     {
-        [Command("UserInfo")]
+        [Command("Stat")]
         public async Task Count()
         {
             await ReplyAsync(embed: new EmbedBuilder
@@ -23,7 +23,8 @@ namespace Yuuka.Modules
                 Title = Context.User.ToString(),
                 Description = $"You uploaded {Program.P.Db.GetCount(Context.Guild.Id, Context.User.Id.ToString())} tags in this guild\n" +
                     $"In these tags, {Program.P.Db.GetDescriptionCount(Context.Guild.Id, Context.User.Id.ToString())} have a description set\n" +
-                    $"All the tags you uploaded takes {(Program.P.Db.GetUploadSize(Context.User.Id.ToString()) / 1000000.0).ToString("0.00")} MB in memory"
+                    $"All the tags you uploaded takes {(Program.P.Db.GetUploadSize(Context.User.Id.ToString()) / 1000000.0).ToString("0.00")} MB in memory\n" +
+                    $"All the tags in this guild takes {(Program.P.Db.GetGuildUploadSize(Context.Guild.Id.ToString()) / 1000000.0).ToString("0.00")} MB in memory\n"
             }.Build());
         }
 
@@ -114,12 +115,12 @@ namespace Yuuka.Modules
                 Title = "Help",
                 Description =
                     "**Help**: Display this help\n" +
-                    "**Description descriptionOfTheTag**: Set the description in one of your tag\n" +
+                    "**Description tag description**: Set the description in one of your tag\n" +
                     "**BotInfo**: Display information about the bot\n" +
                     "**Info tagName**: Display information about a tag\n" +
                     "**List**: List all the tags\n" +
                     "**List text/image/audio**: List all the text/image/audio tags\n" +
-                    "**UserInfo**: Get information about yourself\n" +
+                    "**Stat**: Get information about yourself\n" +
                     "**Random**: Suggest a random tag\n" +
                     "**Random text/image/audio**: Suggestion a random text/image/audio tag\n" +
                     "**Create tagName tagContent**: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment\n" +

@@ -28,6 +28,7 @@ namespace Yuuka.Database
 
             _allTags = new Dictionary<ulong, GuildTags>();
             _uploadSize = new Dictionary<string, long>();
+            _uploadSizeGuild = new Dictionary<string, long>();
         }
 
         public async Task InitGuildAsync(SocketGuild guild)
@@ -58,7 +59,7 @@ namespace Yuuka.Database
                 else
                     content = (byte[])await _r.Binary(elem["Content"]).RunAsync<byte[]>(_conn);
 
-                AddUploadSize(userId, content);
+                AddUploadSize(userId, serverId, content);
 
                 string extension = elem["Extension"].Value<string>();
                 gTags.Tags.Add(tag, new Tag(id, tag, description, type, user, userId, content, extension, isNsfw, creationTime, nbUsage, serverId));
@@ -67,7 +68,7 @@ namespace Yuuka.Database
             _allTags.Add(guild.Id, gTags);
         }
 
-        public void AddUploadSize(string userId, object content)
+        public void AddUploadSize(string userId, string guildId, object content)
         {
             using (var s = new MemoryStream())
             {
@@ -77,10 +78,14 @@ namespace Yuuka.Database
                     _uploadSize.Add(userId, s.Length);
                 else
                     _uploadSize[userId] += s.Length;
+                if (!_uploadSizeGuild.ContainsKey(guildId))
+                    _uploadSizeGuild.Add(guildId, s.Length);
+                else
+                    _uploadSizeGuild[guildId] += s.Length;
             }
         }
 
-        public void RemoveUploadSize(string userId, object content)
+        public void RemoveUploadSize(string userId, string guildId, object content)
         {
             using (var s = new MemoryStream())
             {
@@ -88,12 +93,19 @@ namespace Yuuka.Database
                 formatter.Serialize(s, content);
                 if (_uploadSize.ContainsKey(userId))
                     _uploadSize[userId] -= s.Length;
+                if (_uploadSizeGuild.ContainsKey(guildId))
+                    _uploadSizeGuild[guildId] -= s.Length;
             }
         }
 
         public long GetUploadSize(string userId)
         {
             return !_uploadSize.ContainsKey(userId) ? 0L : _uploadSize[userId];
+        }
+
+        public long GetGuildUploadSize(string guildId)
+        {
+            return !_uploadSizeGuild.ContainsKey(guildId) ? 0L : _uploadSizeGuild[guildId];
         }
 
         public string CanDeleteTag(ulong guildId, ulong userId, string key)
@@ -117,7 +129,7 @@ namespace Yuuka.Database
             key = key.ToLower();
             tags.Tags.Remove(key);
             await _r.Db(_dbName).Table("Tags-" + guildId).Filter(x => x["Key"] == key).Delete().RunAsync(_conn);
-            RemoveUploadSize(userId.ToString(), curr.Content);
+            RemoveUploadSize(userId.ToString(), guildId.ToString(), curr.Content);
             return true;
         }
 
@@ -132,7 +144,7 @@ namespace Yuuka.Database
             Tag tag = new Tag((string)await _r.Uuid(key).RunAsync(_conn), key, "", type, user.ToString(), user.Id.ToString(), content, extension, false, DateTime.UtcNow, 0, serverId);
             await _r.Db(_dbName).Table("Tags-" + guildId).Insert(tag).RunAsync(_conn);
             tags.Tags.Add(key, tag);
-            AddUploadSize(user.Id.ToString(), (object)content);
+            AddUploadSize(user.Id.ToString(), guildId.ToString(), (object)content);
             return true;
         }
 
@@ -212,5 +224,6 @@ namespace Yuuka.Database
 
         private Dictionary<ulong, GuildTags> _allTags;
         private Dictionary<string, long> _uploadSize;
+        private Dictionary<string, long> _uploadSizeGuild;
     }
 }
