@@ -4,6 +4,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using DiscordUtils;
 using Newtonsoft.Json;
+using Sentry;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,6 +35,7 @@ namespace Yuuka
         public Db Db { private set; get; }
         public ulong[] Whitelist { private set; get; }
         private Process _process;
+        private string _sentryToken;
         public Dictionary<ulong, PendingDelete> PendingDelete { get; } = new Dictionary<ulong, PendingDelete>(); // Associate message id and PendingDelete
 
         /// Key: msg id, Value: page, tag
@@ -48,6 +50,19 @@ namespace Yuuka
             });
             Client.Log += Utils.Log;
             _commands.Log += Utils.LogError;
+            _commands.Log += SentryError;
+        }
+
+        private Task SentryError(LogMessage arg)
+        {
+            if (_sentryToken == null)
+                return Task.CompletedTask;
+            if (arg.Exception is CommandException ce)
+                SentrySdk.CaptureException(new Exception(ce.Context.Message.ToString(), arg.Exception));
+            else
+                SentrySdk.CaptureException(arg.Exception);
+
+            return Task.CompletedTask;
         }
 
         ~Program()
@@ -74,6 +89,8 @@ namespace Yuuka
             {
                 dynamic json = JsonConvert.DeserializeObject(File.ReadAllText("Keys/Credentials.json"));
                 botToken = json.botToken;
+                _sentryToken = json.sentryToken;
+                SentrySdk.Init(_sentryToken);
             }
 
             // Init whitelist

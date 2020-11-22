@@ -34,7 +34,7 @@ namespace Yuuka.Modules
         public async Task Description(string tag, [Remainder]string description)
         {
             var ttag = Program.P.Db.GetTag(Context.Guild.Id, tag);
-            if (tag == null)
+            if (ttag == null)
                 await ReplyAsync("This tag does not exist.");
             else if (ttag.UserId != Context.User.Id.ToString())
                 await ReplyAsync("This tag wasn't created by you");
