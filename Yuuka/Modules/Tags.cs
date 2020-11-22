@@ -138,6 +138,8 @@ namespace Yuuka.Modules
                     "**Info tagName**: Display information about a tag\n" +
                     "**List**: List all the tags\n" +
                     "**List text/image/audio**: List all the text/image/audio tags\n" +
+                    "**List me**: List all the tags you uploaded in this server\n" +
+                    "**List my text/image/audio**: List all the text/image/audio tags you uploaded in this server\n" +
                     "**Random**: Suggest a random tag\n" +
                     "**Random text/image/audio**: Suggestion a random text/image/audio tag\n" +
                     "**Stat**: Get information about yourself\n" +
@@ -149,50 +151,60 @@ namespace Yuuka.Modules
         [Command("List")]
         public async Task List()
         {
-            await ListInternalAsync(new EmbedBuilder
-            {
-                Color = Color.Blue,
-                Title = "List of all the tags",
-                Description = string.Join(", ", Program.P.Db.GetList(Context.Guild.Id, 1))
-            }.Build(), Database.TagType.NONE);
+            await ListInternalAsync("", Database.TagType.NONE, false);
         }
 
         [Command("List text")]
         public async Task ListText()
         {
-            await ListInternalAsync(new EmbedBuilder
-            {
-                Color = Color.Blue,
-                Title = "List of all the text tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, Database.TagType.TEXT, 1))
-            }.Build(), Database.TagType.TEXT);
+            await ListInternalAsync("text ", Database.TagType.TEXT, false);
         }
 
         [Command("List image")]
         public async Task ListImage()
         {
-            await ListInternalAsync(new EmbedBuilder
-            {
-                Color = Color.Blue,
-                Title = "List of all the image tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, Database.TagType.IMAGE, 1))
-            }.Build(), Database.TagType.IMAGE);
+            await ListInternalAsync("image ", Database.TagType.IMAGE, false);
         }
 
         [Command("List audio")]
         public async Task ListAudio()
         {
-            await ListInternalAsync(new EmbedBuilder
-            {
-                Color = Color.Blue,
-                Title = "List of all the audio tags",
-                Description = string.Join(", ", Program.P.Db.GetListWithType(Context.Guild.Id, Database.TagType.AUDIO, 1))
-            }.Build(), Database.TagType.AUDIO);
+            await ListInternalAsync("audio ", Database.TagType.AUDIO, false);
         }
 
-        private async Task ListInternalAsync(Embed embed, Database.TagType type)
+        [Command("List me"), Alias("List my")]
+        public async Task ListMy()
         {
-            var msg = await ReplyAsync(embed: embed);
+            await ListInternalAsync("", Database.TagType.NONE, true);
+        }
+
+        [Command("List my text"), Alias("List me text")]
+        public async Task ListMyText()
+        {
+            await ListInternalAsync("text ", Database.TagType.TEXT, true);
+        }
+
+        [Command("List my image"), Alias("List me image")]
+        public async Task ListMyImage()
+        {
+            await ListInternalAsync("image ", Database.TagType.IMAGE, true);
+        }
+
+        [Command("List my audio"), Alias("List me audio")]
+        public async Task ListMyAudio()
+        {
+            await ListInternalAsync("audio ", Database.TagType.AUDIO, true);
+        }
+
+        private async Task ListInternalAsync(string name, Database.TagType type, bool onlyMine)
+        {
+            var msg = await ReplyAsync(embed: new EmbedBuilder
+            {
+                Color = Color.Blue,
+                Title = "List of all the " + name + "tags",
+                Description = string.Join(", ", type == Database.TagType.NONE ? Program.P.Db.GetList(Context.Guild.Id, Context.User.Id.ToString(), 1, onlyMine)
+                    : Program.P.Db.GetListWithType(Context.Guild.Id, Context.User.Id.ToString(), type, 1, onlyMine))
+            }.Build());
             if ((type == Database.TagType.NONE ? Program.P.Db.Count(Context.Guild.Id) : Program.P.Db.Count(Context.Guild.Id, type)) > 100)
             {
                 Program.P.Messages.Add(msg.Id, new Tuple<int, Database.TagType>(1, type));

@@ -177,14 +177,14 @@ namespace Yuuka.Database
             ).RunAsync(_conn);
         }
 
-        public string[] GetList(ulong guildId, int count)
+        public string[] GetList(ulong guildId, string userId, int count, bool onlyMine)
         {
-            return new List<Tag>(_allTags[guildId].Tags.Values).Select(x => x.Key).OrderBy(x => x).Take(100 * count).Skip(100 * count - 100).ToArray();
+            return new List<Tag>(_allTags[guildId].Tags.Values).Where(x => !onlyMine || x.UserId == userId).Select(x => x.Key).OrderBy(x => x).Take(100 * count).Skip(100 * count - 100).ToArray();
         }
 
-        public string[] GetListWithType(ulong guildId, TagType type, int count)
+        public string[] GetListWithType(ulong guildId, string userId, TagType type, int count, bool onlyMine)
         {
-            var tags = new List<Tag>(_allTags[guildId].Tags.Values).Where(x => x.Type == type).OrderBy(x => x.Key);
+            var tags = new List<Tag>(_allTags[guildId].Tags.Values).Where(x => x.Type == type && (!onlyMine || x.UserId == userId)).OrderBy(x => x.Key);
             return tags.Select(x => x.Key).Take(100 * count).Skip(100 * count - 100).ToArray();
         }
 

@@ -146,6 +146,7 @@ namespace Yuuka
                 var elem = Messages[msg.Id];
                 var dMsg = await msg.GetOrDownloadAsync();
                 var page = elem.Item1;
+                var author = dMsg.Author as IGuildUser;
                 if (emote == "◀️") page--;
                 else if (emote == "▶️") page++;
                 var count = elem.Item2 == Database.TagType.NONE ? Db.Count(guildId) : Db.Count(guildId, elem.Item2);
@@ -164,10 +165,9 @@ namespace Yuuka
                 {
                     Color = Color.Blue,
                     Title = $"List of all the{type} tags",
-                    Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(guildId, page) : Db.GetListWithType(guildId, elem.Item2, page))
+                    Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(guildId, author.Id.ToString(), page, false) : Db.GetListWithType(guildId, author.Id.ToString(), elem.Item2, page, false))
                 }.Build());
                 Messages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
-                var author = dMsg.Author as IGuildUser;
                 if (author != null && author.GuildPermissions.ManageMessages)
                     await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
             }
