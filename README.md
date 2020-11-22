@@ -18,6 +18,9 @@ tagContent can either be text, or an image/audio file (you'ld need to send it in
 <br/>
 <br/>
 The bot would then display the text/image or play the audio file in vocal channel
+<br/>
+<br/>
+Feel free to do the help command for more information about the functionalities
 
 ## Invite link
 https://discord.com/oauth2/authorize?client_id=734788725388869742&permissions=3196928&scope=bot
