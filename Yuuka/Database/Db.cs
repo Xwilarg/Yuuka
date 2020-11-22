@@ -245,6 +245,14 @@ namespace Yuuka.Database
                 .With("Prefix", prefix)
             ).RunAsync(_conn);
         }
+        public async Task UpdateWhitelistAsync(ulong guildId, string[] whitelist)
+        {
+            _guilds[guildId].AllowedRoles = whitelist;
+            await _r.Db(_dbName).Table("Guilds").Update(_r.HashMap("id", guildId.ToString())
+                .With("AllowedRoles", whitelist)
+            ).RunAsync(_conn);
+        }
+
 
         public Guild GetGuild(ulong id) => _guilds[id];
 

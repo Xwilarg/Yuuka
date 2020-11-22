@@ -144,6 +144,11 @@ namespace Yuuka.Modules
                     "**Random**: Suggest a random tag\n" +
                     "**Random text/image/audio**: Suggestion a random text/image/audio tag\n" +
                     "**Stat**: Get information about yourself\n" +
+                    "**Prefix**: Display your current prefix\n" +
+                    "**Prefix newPrefix**: Modify the prefix of the bot\n" +
+                    "**Whitelist**: Display your current whitelist\n" +
+                    "**Whitelist none**: Remove the whitelist for your server (allow everyone to create tags)\n" +
+                    "**Whitelist listOfRoleIds**: Add a whitelist for your server (only the specified roles can create tags)\n" +
                     "**BotInfo**: Display information about the bot\n" +
                     "**Help**: Display this help\n"
             }.Build());
@@ -330,6 +335,12 @@ namespace Yuuka.Modules
         [Command("Create")]
         public async Task Create(string key, [Remainder]string content = "")
         {
+            var allowedRoles = Program.P.Db.GetGuild(Context.Guild.Id).AllowedRoles;
+            if (allowedRoles.Length > 0 && !((IGuildUser)Context.User).RoleIds.Any(x => allowedRoles.Contains(x.ToString())))
+            {
+                await ReplyAsync("You are not whitelisted by your server to create tags");
+                return;
+            }
             if (!Program.P.Whitelist.Contains(Context.User.Id))
             {
                 if (Program.P.Db.GetUploadSize(Context.User.Id.ToString()) > 5000000)
@@ -339,7 +350,7 @@ namespace Yuuka.Modules
                 }
                 if (Program.P.Db.GetUploadSize(Context.User.Id.ToString()) > 100000000)
                 {
-                    await ReplyAsync("Your guild can't have more than 100MB of tag.");
+                    await ReplyAsync("Your server can't have more than 100MB of tag.");
                     return;
                 }
             }
