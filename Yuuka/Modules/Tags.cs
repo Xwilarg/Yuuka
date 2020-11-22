@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -52,6 +53,13 @@ namespace Yuuka.Modules
             else
             {
                 var type = ttag.Type.ToString();
+                long length;
+                using (var s = new MemoryStream())
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(s, ttag.Content);
+                    length = s.Length;
+                }
                 var list = new List<EmbedFieldBuilder>
                 {
                     new EmbedFieldBuilder
@@ -76,6 +84,12 @@ namespace Yuuka.Modules
                     {
                         Name = "Count",
                         Value = ttag.NbUsage,
+                        IsInline = true
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        Name = "Tag size",
+                        Value = (length / 1000.0).ToString("0.00") + " KB",
                         IsInline = true
                     },
                     new EmbedFieldBuilder
@@ -292,10 +306,18 @@ namespace Yuuka.Modules
         [Command("Create")]
         public async Task Create(string key, [Remainder]string content = "")
         {
-            if (Program.P.Whitelist != null && !Program.P.Whitelist.Contains(Context.User.Id))
+            if (!Program.P.Whitelist.Contains(Context.User.Id))
             {
-                await ReplyAsync("You need to be whitelisted to create tags. For this, please contact Zirk#0001 on Discord.");
-                return;
+                if (Program.P.Db.GetUploadSize(Context.User.Id.ToString()) > 5000000)
+                {
+                    await ReplyAsync("Basic account can't upload more than 5MB of tag.");
+                    return;
+                }
+                if (Program.P.Db.GetUploadSize(Context.User.Id.ToString()) > 100000000)
+                {
+                    await ReplyAsync("Your guild can't have more than 100MB of tag.");
+                    return;
+                }
             }
             if (key.Any(x => !char.IsLetterOrDigit(x) && x != '_'))
             {
