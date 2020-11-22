@@ -207,7 +207,10 @@ namespace Yuuka.Modules
             }.Build());
             if ((type == Database.TagType.NONE ? Program.P.Db.Count(Context.Guild.Id) : Program.P.Db.Count(Context.Guild.Id, type)) > 100)
             {
-                Program.P.Messages.Add(msg.Id, new Tuple<int, Database.TagType>(1, type));
+                if (onlyMine)
+                    Program.P.MeMessages.Add(msg.Id, new Tuple<int, Database.TagType>(1, type));
+                else
+                    Program.P.Messages.Add(msg.Id, new Tuple<int, Database.TagType>(1, type));
                 await AddReactions(msg);
             }
         }
