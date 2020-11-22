@@ -131,6 +131,7 @@ namespace Yuuka.Modules
                 Description =
                     "Yuuka is a bot where you create commands that display texts/images/audios\n" +
                     "You can manage your tags with the create, delete and info commands.\n" +
+                    "A basic account can only upload up to 5MB and a guild can only have up to 100MB of tags\n" +
                     "\n**Full command list:**\n" +
                     "**Create tagName tagContent**: Create a new tag given a name and a content, to upload image/audio tag, put the file in attachment\n" +
                     "**Delete tagName**: Delete an existing tag" +
@@ -303,7 +304,7 @@ namespace Yuuka.Modules
         [Command("Delete")]
         public async Task Delete(string key)
         {
-            var error = Program.P.Db.CanDeleteTag(Context.Guild.Id, Context.User.Id, key);
+            var error = Program.P.Db.CanDeleteTag(Context.Guild, Context.User.Id, key);
             if (error != null)
                 await ReplyAsync(error);
             else
@@ -311,7 +312,11 @@ namespace Yuuka.Modules
                 var reply = await ReplyAsync(embed: new EmbedBuilder
                 {
                     Title = $"Are you sure you want to delete {key}?",
-                    Color = Color.Blue
+                    Color = Color.Blue,
+                    Footer = Context.User.Id == Context.Guild.OwnerId ? new EmbedFooterBuilder
+                    {
+                        Text = "As the server owner, you are allowed to delete tags from everyone"
+                    } : null
                 }.Build());
                 Program.P.PendingDelete.Add(reply.Id, new PendingDelete
                 {
@@ -381,7 +386,7 @@ namespace Yuuka.Modules
                     await ReplyAsync("You must give the content of your tag");
                     return;
                 }
-                type = Yuuka.Database.TagType.TEXT;
+                type = Database.TagType.TEXT;
                 tContent = content;
             }
             if (await Program.P.Db.AddTagAsync(Context.Guild.Id, type, key, Context.User, tContent, extension, Context.Guild.Id.ToString()))

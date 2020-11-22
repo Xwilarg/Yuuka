@@ -219,7 +219,7 @@ namespace Yuuka
                         await dMsg.DeleteAsync();
                     else
                     {
-                        await Db.DeleteTagAsync((chan as ITextChannel).GuildId, react.UserId, delete.Tag);
+                        await Db.DeleteTagAsync((chan as ITextChannel).Guild, react.UserId, delete.Tag);
                         await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
                         {
                             Title = "Your tag was deleted",

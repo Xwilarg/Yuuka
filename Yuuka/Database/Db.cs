@@ -113,28 +113,28 @@ namespace Yuuka.Database
             return !_uploadSizeGuild.ContainsKey(guildId) ? 0L : _uploadSizeGuild[guildId];
         }
 
-        public string CanDeleteTag(ulong guildId, ulong userId, string key)
+        public string CanDeleteTag(IGuild guild, ulong userId, string key)
         {
-            var tags = _allTags[guildId];
+            var tags = _allTags[guild.Id];
             key = key.ToLower();
             if (!tags.Tags.ContainsKey(key))
                 return "This tag doesn't exist.";
-            if (tags.Tags[key].UserId != userId.ToString())
+            if (tags.Tags[key].UserId != userId.ToString() && userId != guild.OwnerId)
                 return "This tag wasn't created by you";
             return null;
         }
 
-        public async Task<bool> DeleteTagAsync(ulong guildId, ulong userId, string key)
+        public async Task<bool> DeleteTagAsync(IGuild guild, ulong userId, string key)
         {
-            if (CanDeleteTag(guildId, userId, key) != null)
+            if (CanDeleteTag(guild, userId, key) != null)
                 return false;
 
-            var tags = _allTags[guildId];
+            var tags = _allTags[guild.Id];
             var curr = tags.Tags[key];
             key = key.ToLower();
             tags.Tags.Remove(key);
-            await _r.Db(_dbName).Table("Tags-" + guildId).Filter(x => x["Key"] == key).Delete().RunAsync(_conn);
-            RemoveUploadSize(userId.ToString(), guildId.ToString(), curr.Content);
+            await _r.Db(_dbName).Table("Tags-" + guild.Id).Filter(x => x["Key"] == key).Delete().RunAsync(_conn);
+            RemoveUploadSize(userId.ToString(), guild.Id.ToString(), curr.Content);
             return true;
         }
 
