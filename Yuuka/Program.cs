@@ -250,23 +250,34 @@ namespace Yuuka
                 var result = await _commands.ExecuteAsync(context, pos, null);
                 if (!result.IsSuccess && msg.Content.Split(' ').Length == 1) // Command failed & message have only one argument
                 {
-                    _ = Task.Run(async () =>
+                    switch (result.Error)
                     {
-                        try
-                        {
-                            await Tags.Show(context, msg.Content.Substring(pos).ToLower()); // We do that here because we can't create an empty command
-                        }
-                        catch (Exception e)
-                        {
-                            await Utils.LogError(new LogMessage(LogSeverity.Error, e.Source, e.Message, e));
-                            await context.Channel.SendMessageAsync("", false, new EmbedBuilder()
+                        case CommandError.BadArgCount:
+                        case CommandError.ParseFailed:
+                        case CommandError.UnmetPrecondition:
+                            await msg.Channel.SendMessageAsync(result.ErrorReason);
+                            break;
+
+                        default:
+                            _ = Task.Run(async () =>
                             {
-                                Color = Color.Red,
-                                Title = e.GetType().ToString(),
-                                Description = "An error occured while executing last command.\nHere are some details about it: " + e.InnerException.Message
-                            }.Build());
-                        }
-                    });
+                                try
+                                {
+                                    await Tags.Show(context, msg.Content.Substring(pos).ToLower()); // We do that here because we can't create an empty command
+                                }
+                                catch (Exception e)
+                                {
+                                    await Utils.LogError(new LogMessage(LogSeverity.Error, e.Source, e.Message, e));
+                                    await context.Channel.SendMessageAsync("", false, new EmbedBuilder()
+                                    {
+                                        Color = Color.Red,
+                                        Title = e.GetType().ToString(),
+                                        Description = "An error occured while executing last command.\nHere are some details about it: " + e.InnerException.Message
+                                    }.Build());
+                                }
+                            });
+                            break;
+                    }
                 }
             }
         }
