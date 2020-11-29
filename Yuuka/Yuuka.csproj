@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.2.0" />
+    <PackageReference Include="DiscordBotsList.Api" Version="1.4.0" />
     <PackageReference Include="RethinkDb.Driver" Version="2.3.150" />
     <PackageReference Include="Sentry" Version="2.1.8" />
   </ItemGroup>

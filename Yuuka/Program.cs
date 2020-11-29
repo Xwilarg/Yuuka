@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
+using DiscordBotsList.Api;
 using DiscordUtils;
 using Newtonsoft.Json;
 using Sentry;
@@ -36,6 +37,9 @@ namespace Yuuka
         public ulong[] Whitelist { private set; get; }
         private Process _process;
         private string _sentryToken;
+        private AuthDiscordBotListApi _topGGAPI = null;
+        private string _topGGToken = null;
+        private DateTime _lastDiscordBotsSent;
         public Dictionary<ulong, PendingDelete> PendingDelete { get; } = new Dictionary<ulong, PendingDelete>(); // Associate message id and PendingDelete
 
         /// Key: msg id, Value: page, tag
@@ -91,6 +95,7 @@ namespace Yuuka
                 botToken = json.botToken;
                 _sentryToken = json.sentryToken;
                 SentrySdk.Init(_sentryToken);
+                _topGGToken = json.topGGToken;
             }
 
             // Init whitelist
@@ -139,6 +144,9 @@ namespace Yuuka
             Client.ReactionAdded += ReactionAdded;
             Client.GuildAvailable += GuildJoined;
             Client.JoinedGuild += GuildJoined;
+            Client.Connected += Connected;
+            Client.JoinedGuild += UpdateDiscordBots;
+            Client.LeftGuild += UpdateDiscordBots;
 
             StartTime = DateTime.Now;
             try
@@ -155,6 +163,25 @@ namespace Yuuka
             await Client.StartAsync();
 
             await Task.Delay(-1);
+        }
+
+        private Task Connected()
+        {
+            if (_topGGToken == null)
+                return Task.CompletedTask;
+
+            _topGGAPI = new AuthDiscordBotListApi(Client.CurrentUser.Id, _topGGToken);
+
+            return Task.CompletedTask;
+        }
+
+        private async Task UpdateDiscordBots(SocketGuild _)
+        {
+            if (_topGGAPI != null && _lastDiscordBotsSent.AddMinutes(10).CompareTo(DateTime.Now) < 0)
+            {
+                _lastDiscordBotsSent = DateTime.Now;
+                await _topGGAPI.UpdateStats(Client.Guilds.Count);
+            }
         }
 
         private async Task ReactionAdded(Cacheable<IUserMessage, ulong> msg, ISocketMessageChannel chan, SocketReaction react)
