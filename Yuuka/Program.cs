@@ -39,7 +39,7 @@ namespace Yuuka
         private string _sentryToken;
         private AuthDiscordBotListApi _topGGAPI = null;
         private string _topGGToken = null;
-        private DateTime _lastDiscordBotsSent;
+        private DateTime _lastDiscordBotsSent = DateTime.MinValue;
         public Dictionary<ulong, PendingDelete> PendingDelete { get; } = new Dictionary<ulong, PendingDelete>(); // Associate message id and PendingDelete
 
         /// Key: msg id, Value: page, tag
@@ -165,14 +165,13 @@ namespace Yuuka
             await Task.Delay(-1);
         }
 
-        private Task Connected()
+        private async Task Connected()
         {
             if (_topGGToken == null)
-                return Task.CompletedTask;
+                return;
 
             _topGGAPI = new AuthDiscordBotListApi(Client.CurrentUser.Id, _topGGToken);
-
-            return Task.CompletedTask;
+            await UpdateDiscordBots(null);
         }
 
         private async Task UpdateDiscordBots(SocketGuild _)
