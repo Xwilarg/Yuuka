@@ -343,7 +343,9 @@ namespace Yuuka.Modules
         public async Task Create(string key, [Remainder]string content = "")
         {
             var allowedRoles = Program.P.Db.GetGuild(Context.Guild.Id).AllowedRoles;
-            if (allowedRoles.Length > 0 && !((IGuildUser)Context.User).RoleIds.Any(x => allowedRoles.Contains(x.ToString())))
+            if (allowedRoles.Length > 0
+                && !((IGuildUser)Context.User).RoleIds.Any(x => allowedRoles.Contains(x.ToString()))
+                && Context.Guild.OwnerId != Context.User.Id)
             {
                 await ReplyAsync("You are not whitelisted by your server to create tags");
                 return;
