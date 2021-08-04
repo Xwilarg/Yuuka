@@ -355,7 +355,7 @@ namespace Yuuka.Modules
                     await ReplyAsync("Basic account can't upload more than 5MB of tag.");
                     return;
                 }
-                if (Program.P.Db.GetUploadSize(Context.User.Id.ToString()) > 100000000)
+                if (Program.P.Db.GetGuildUploadSize(Context.Guild.Id.ToString()) > 100000000)
                 {
                     await ReplyAsync("Your server can't have more than 100MB of tag.");
                     return;
