@@ -187,94 +187,101 @@ namespace Yuuka
         {
             _ = Task.Run(async () =>
             {
-                string emote = react.Emote.ToString();
-                var guildId = (chan as ITextChannel).GuildId;
-                if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "◀️" || emote == "▶️") && Messages.ContainsKey(msg.Id))
+                try
                 {
-                    var elem = Messages[msg.Id];
-                    var dMsg = await msg.GetOrDownloadAsync();
-                    var page = elem.Item1;
-                    var author = dMsg.Author as IGuildUser;
-                    if (emote == "◀️") page--;
-                    else if (emote == "▶️") page++;
-                    var count = elem.Item2 == Database.TagType.NONE ? Db.Count(guildId) : Db.Count(guildId, elem.Item2);
-                    if (page == 0 || page > (count / 100) + 1)
-                        return;
-                    if (page == (count / 100) + 1 && count % 100 == 0)
-                        return;
-                    string type = "";
-                    switch (elem.Item2)
+                    string emote = react.Emote.ToString();
+                    var guildId = (chan as ITextChannel).GuildId;
+                    if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "◀️" || emote == "▶️") && Messages.ContainsKey(msg.Id))
                     {
-                        case Database.TagType.TEXT: type = "text"; break;
-                        case Database.TagType.IMAGE: type = "image"; break;
-                        case Database.TagType.AUDIO: type = "audio"; break;
-                    }
-                    await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
-                    {
-                        Color = Color.Blue,
-                        Title = $"List of all the{type} tags",
-                        Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(guildId, author.Id.ToString(), page, false) : Db.GetListWithType(guildId, author.Id.ToString(), elem.Item2, page, false))
-                    }.Build());
-                    Messages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
-                    if (author != null && author.GuildPermissions.ManageMessages)
-                        await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
-                }
-
-                // TODO: Refactor to not copy code
-                if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "◀️" || emote == "▶️") && MeMessages.ContainsKey(msg.Id))
-                {
-                    var elem = MeMessages[msg.Id];
-                    var dMsg = await msg.GetOrDownloadAsync();
-                    var page = elem.Item1;
-                    var author = dMsg.Author as IGuildUser;
-                    if (emote == "◀️") page--;
-                    else if (emote == "▶️") page++;
-                    var count = elem.Item2 == Database.TagType.NONE ? Db.Count(guildId) : Db.Count(guildId, elem.Item2);
-                    if (page == 0 || page > (count / 100) + 1)
-                        return;
-                    if (page == (count / 100) + 1 && count % 100 == 0)
-                        return;
-                    string type = "";
-                    switch (elem.Item2)
-                    {
-                        case Database.TagType.TEXT: type = "text"; break;
-                        case Database.TagType.IMAGE: type = "image"; break;
-                        case Database.TagType.AUDIO: type = "audio"; break;
-                    }
-                    await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
-                    {
-                        Color = Color.Blue,
-                        Title = $"List of all the{type} tags",
-                        Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(guildId, author.Id.ToString(), page, true) : Db.GetListWithType(guildId, author.Id.ToString(), elem.Item2, page, true))
-                    }.Build());
-                    MeMessages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
-                    if (author != null && author.GuildPermissions.ManageMessages)
-                        await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
-                }
-
-                if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "✅" || emote == "❌") && PendingDelete.ContainsKey(msg.Id))
-                {
-                    var delete = PendingDelete[msg.Id];
-                    if (delete.UserId != react.UserId)
-                        return;
-
-                    var dMsg = await msg.GetOrDownloadAsync();
-                    if (emote == "❌")
-                        await dMsg.DeleteAsync();
-                    else
-                    {
-                        await Db.DeleteTagAsync((chan as ITextChannel).Guild, react.User.Value as IGuildUser, delete.Tag);
+                        var elem = Messages[msg.Id];
+                        var dMsg = await msg.GetOrDownloadAsync();
+                        var page = elem.Item1;
+                        var author = dMsg.Author as IGuildUser;
+                        if (emote == "◀️") page--;
+                        else if (emote == "▶️") page++;
+                        var count = elem.Item2 == Database.TagType.NONE ? Db.Count(guildId) : Db.Count(guildId, elem.Item2);
+                        if (page == 0 || page > (count / 100) + 1)
+                            return;
+                        if (page == (count / 100) + 1 && count % 100 == 0)
+                            return;
+                        string type = "";
+                        switch (elem.Item2)
+                        {
+                            case Database.TagType.TEXT: type = "text"; break;
+                            case Database.TagType.IMAGE: type = "image"; break;
+                            case Database.TagType.AUDIO: type = "audio"; break;
+                        }
                         await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
                         {
-                            Title = "Your tag was deleted",
-                            Color = Color.Green
+                            Color = Color.Blue,
+                            Title = $"List of all the{type} tags",
+                            Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(guildId, author.Id.ToString(), page, false) : Db.GetListWithType(guildId, author.Id.ToString(), elem.Item2, page, false))
                         }.Build());
+                        Messages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
+                        if (author != null && author.GuildPermissions.ManageMessages)
+                            await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
                     }
 
-                    PendingDelete.Remove(msg.Id);
-                    var author = dMsg.Author as IGuildUser;
-                    if (author != null && author.GuildPermissions.ManageMessages)
-                        await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
+                    // TODO: Refactor to not copy code
+                    if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "◀️" || emote == "▶️") && MeMessages.ContainsKey(msg.Id))
+                    {
+                        var elem = MeMessages[msg.Id];
+                        var dMsg = await msg.GetOrDownloadAsync();
+                        var page = elem.Item1;
+                        var author = dMsg.Author as IGuildUser;
+                        if (emote == "◀️") page--;
+                        else if (emote == "▶️") page++;
+                        var count = elem.Item2 == Database.TagType.NONE ? Db.Count(guildId) : Db.Count(guildId, elem.Item2);
+                        if (page == 0 || page > (count / 100) + 1)
+                            return;
+                        if (page == (count / 100) + 1 && count % 100 == 0)
+                            return;
+                        string type = "";
+                        switch (elem.Item2)
+                        {
+                            case Database.TagType.TEXT: type = "text"; break;
+                            case Database.TagType.IMAGE: type = "image"; break;
+                            case Database.TagType.AUDIO: type = "audio"; break;
+                        }
+                        await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
+                        {
+                            Color = Color.Blue,
+                            Title = $"List of all the{type} tags",
+                            Description = string.Join(", ", elem.Item2 == Database.TagType.NONE ? Db.GetList(guildId, author.Id.ToString(), page, true) : Db.GetListWithType(guildId, author.Id.ToString(), elem.Item2, page, true))
+                        }.Build());
+                        MeMessages[msg.Id] = new Tuple<int, Database.TagType>(page, elem.Item2);
+                        if (author != null && author.GuildPermissions.ManageMessages)
+                            await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
+                    }
+
+                    if (react.User.Value.Id != Client.CurrentUser.Id && (emote == "✅" || emote == "❌") && PendingDelete.ContainsKey(msg.Id))
+                    {
+                        var delete = PendingDelete[msg.Id];
+                        if (delete.UserId != react.UserId)
+                            return;
+
+                        var dMsg = await msg.GetOrDownloadAsync();
+                        if (emote == "❌")
+                            await dMsg.DeleteAsync();
+                        else
+                        {
+                            await Db.DeleteTagAsync((chan as ITextChannel).Guild, react.User.Value as IGuildUser, delete.Tag);
+                            await dMsg.ModifyAsync(x => x.Embed = new EmbedBuilder
+                            {
+                                Title = "Your tag was deleted",
+                                Color = Color.Green
+                            }.Build());
+                        }
+
+                        PendingDelete.Remove(msg.Id);
+                        var author = dMsg.Author as IGuildUser;
+                        if (author != null && author.GuildPermissions.ManageMessages)
+                            await dMsg.RemoveReactionAsync(react.Emote, react.User.Value);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Utils.LogError(new LogMessage(LogSeverity.Error, ex.Source, ex.Message, ex));
                 }
             });
         }
