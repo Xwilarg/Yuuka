@@ -145,8 +145,8 @@ namespace Yuuka.Database
                 return false;
 
             var tags = _allTags[guild.Id];
-            var curr = tags.Tags[key];
             key = key.ToLower();
+            var curr = tags.Tags[key];
             tags.Tags.Remove(key);
             await _r.Db(_dbName).Table("Tags-" + guild.Id).Filter(x => x["Key"] == key).Delete().RunAsync(_conn);
             RemoveUploadSize(user.Id.ToString(), guild.Id.ToString(), curr.Content);
